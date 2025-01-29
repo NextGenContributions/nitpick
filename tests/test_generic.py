@@ -21,6 +21,7 @@ from nitpick.generic import (
     glob_non_ignored_files,
     relative_to_current_dir,
 )
+from nitpick.plugins import FileInfo
 
 
 @mock.patch.object(Path, "cwd")
@@ -188,3 +189,37 @@ def test_error_when_calling_git_config(
     assert get_global_gitignore_path() is None
     captured = capsys.readouterr()
     assert captured.err.strip().casefold() == message.strip().casefold()
+
+
+@pytest.mark.parametrize(
+    ("filepath", "expected_tags"),
+    [
+        (
+            "foo/.pylintrc.toml",
+            {"pylintrc", "text", "toml"},
+        ),
+        (
+            "foo/pylintrc.toml",
+            {"pylintrc", "text", "toml"},
+        ),
+        (
+            "foo/.pylintrc",
+            {"pylintrc", "text", "ini"},
+        ),
+        (
+            "foo/pylintrc",
+            {"pylintrc", "text", "ini"},
+        ),
+    ],
+)
+def test_different_types_of_pylintrc_config_should_work(filepath: str, expected_tags: set[str]):
+    """Different pylintrc configs should have different expected tags.
+
+    'pylintrc' is a special case where the config can either be a TOML or INI file.
+    Determining the correct tags is important for the plugins to work correctly.
+    Having an incorrect plugin working on a file can lead to unexpected results.
+
+    More on how pylint search for and use configuration files:
+    https://pylint.pycqa.org/en/latest/user_guide/usage/run.html#command-line-options
+    """
+    assert FileInfo.tags_from_filename(filepath) == expected_tags

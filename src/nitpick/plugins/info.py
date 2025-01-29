@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from identify import identify
@@ -29,5 +30,26 @@ class FileInfo:
             clean_path = DOT + path_from_root
         else:
             clean_path = DOT + path_from_root[1:] if path_from_root.startswith("-") else path_from_root
-        tags = set(identify.tags_from_filename(clean_path))
+        tags = FileInfo.tags_from_filename(clean_path)
         return cls(project, clean_path, tags)
+
+    @staticmethod
+    def tags_from_filename(path: str) -> set[str]:
+        """Get a list of tags associated with the file."""
+        tags = identify.tags_from_filename(path)
+
+        # Check for conflicting tags, there can be only one of these
+        conflicting_tags = {"ini", "toml", "yaml", "json"}
+        found_tags = conflicting_tags.intersection(tags)
+        if len(found_tags) > 1:
+            ext = Path(path).suffix
+            if ext:
+                # The file has a valid extension and not just some ".dotfile"
+                ext = ext[1:].lower()
+                if ext in found_tags:
+                    # Keep only the tag that matches the extension
+                    tags -= found_tags
+                    tags.add(ext)
+
+        # If there's no conflict or the extension is not recognized, return all the tags
+        return tags
