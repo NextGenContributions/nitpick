@@ -496,3 +496,31 @@ def test_generic_ini_with_missing_header(tmp_path):
     ).assert_file_contents(
         "generic.ini", expected_generic_ini
     )
+
+
+def test_falsy_values_should_be_reported_and_fixed(tmp_path, datadir):
+    """Test that falsy and truthy values are included in the report."""
+    filename = "foo/file.ini"
+    project = ProjectMock(tmp_path).save_file(filename, datadir / "falsy_values/actual.ini")
+    project.style(datadir / "falsy_values/desired.toml").api_check_then_fix(
+        *[
+            Fuss(
+                True,
+                filename,
+                Violations.OPTION_HAS_DIFFERENT_VALUE.code,
+                f": [config]{name} is {actual} but it should be like this:",
+                f"[config]\n{name} = {expected}",
+            )
+            for (name, actual, expected) in [
+                ("boolean_true_unmatch", "false", "True"),
+                ("boolean_false_unmatch", "true", "False"),
+                ("string_a_unmatch", "string_b", "string_a"),
+                ("string_b_unmatch", "string_a", "string_b"),
+                ("truthy_int_unmatch", "0", "1"),
+                ("falsy_int_unmatch", "1", "0"),
+                ("truthy_float_unmatch", "0.0", "1.0"),
+                ("falsy_float_unmatch", "1.0", "0.0"),
+            ]
+        ]
+    ).assert_file_contents(filename, datadir / "falsy_values/expected.ini")
+    project.api_check().assert_violations()

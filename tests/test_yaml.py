@@ -156,3 +156,28 @@ def test_maximum_two_level_nesting_on_lists_using_jmes_expression_as_list_key_fa
         ),
     ).assert_file_contents(filename, datadir / "jmes-list-key-expected.yaml")
     project.api_check().assert_violations()
+
+
+def test_falsy_values_should_be_reported_and_fixed(tmp_path, datadir):
+    """Test that falsy and truthy values are included in the report."""
+    filename = "foo/file.yaml"
+    project = ProjectMock(tmp_path).save_file(filename, datadir / "falsy_values/actual.yaml")
+    project.style(datadir / "falsy_values/desired.toml").api_check_then_fix(
+        Fuss(
+            True,
+            filename,
+            369,
+            " has different values. Use this:",
+            """
+            boolean_true_unmatch: true
+            boolean_false_unmatch: false
+            string_a_unmatch: string_a
+            string_b_unmatch: string_b
+            truthy_int_unmatch: 1
+            falsy_int_unmatch: 0
+            truthy_float_unmatch: 1.0
+            falsy_float_unmatch: 0.0
+            """,
+        )
+    ).assert_file_contents(filename, datadir / "falsy_values/expected.yaml")
+    project.api_check().assert_violations()

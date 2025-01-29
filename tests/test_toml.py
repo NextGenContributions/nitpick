@@ -165,3 +165,28 @@ def test_missing_different_values_any_toml(tmp_path):
         list = ["a", "b", "c"]
         """,
     )
+
+
+def test_falsy_values_should_be_reported_and_fixed(tmp_path, datadir):
+    """Test that falsy and truthy values are included in the report."""
+    filename = "foo/file.toml"
+    project = ProjectMock(tmp_path).save_file(filename, datadir / "falsy_values/actual.toml")
+    project.style(datadir / "falsy_values/desired.toml").api_check_then_fix(
+        Fuss(
+            True,
+            filename,
+            319,
+            " has different values. Use this:",
+            """
+            boolean_true_unmatch = true
+            boolean_false_unmatch = false
+            string_a_unmatch = "string_a"
+            string_b_unmatch = "string_b"
+            truthy_int_unmatch = 1
+            falsy_int_unmatch = 0
+            truthy_float_unmatch = 1.0
+            falsy_float_unmatch = 0.0
+            """,
+        )
+    ).assert_file_contents(filename, datadir / "falsy_values/expected.toml")
+    project.api_check().assert_violations()
