@@ -13,11 +13,14 @@ import pytest
 from furl import furl
 from testfixtures import compare
 
-from nitpick.constants import (EDITOR_CONFIG, GIT_DIR, GIT_IGNORE,
-                               PYTHON_TOX_INI)
-from nitpick.generic import (_url_to_posix_path, _url_to_windows_path,
-                             get_global_gitignore_path, glob_non_ignored_files,
-                             relative_to_current_dir)
+from nitpick.constants import EDITOR_CONFIG, GIT_DIR, GIT_IGNORE, PYTHON_TOX_INI
+from nitpick.generic import (
+    _url_to_posix_path,
+    _url_to_windows_path,
+    get_global_gitignore_path,
+    glob_non_ignored_files,
+    relative_to_current_dir,
+)
 from nitpick.plugins import FileInfo
 
 
