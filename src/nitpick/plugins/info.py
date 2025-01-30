@@ -42,8 +42,7 @@ class FileInfo:
         conflicting_tags = {"ini", "toml", "yaml", "json"}
         found_tags = conflicting_tags.intersection(tags)
         if len(found_tags) > 1:
-            ext = Path(path).suffix
-            if ext:
+            if ext := Path(path).suffix:
                 # The file has a valid extension and not just some ".dotfile"
                 ext = ext[1:].lower()
                 if ext in found_tags:
