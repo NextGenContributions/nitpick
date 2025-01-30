@@ -13,14 +13,11 @@ import pytest
 from furl import furl
 from testfixtures import compare
 
-from nitpick.constants import EDITOR_CONFIG, GIT_DIR, GIT_IGNORE, PYTHON_TOX_INI
-from nitpick.generic import (
-    _url_to_posix_path,
-    _url_to_windows_path,
-    get_global_gitignore_path,
-    glob_non_ignored_files,
-    relative_to_current_dir,
-)
+from nitpick.constants import (EDITOR_CONFIG, GIT_DIR, GIT_IGNORE,
+                               PYTHON_TOX_INI)
+from nitpick.generic import (_url_to_posix_path, _url_to_windows_path,
+                             get_global_gitignore_path, glob_non_ignored_files,
+                             relative_to_current_dir)
 from nitpick.plugins import FileInfo
 
 
@@ -74,14 +71,7 @@ def test_relative_to_current_dir(home, cwd):
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows-only test")
-@pytest.mark.parametrize(
-    "test_path",
-    [
-        "C:\\",
-        r"C:\path\file.toml",
-        r"//server/share/path/file.toml",
-    ],
-)
+@pytest.mark.parametrize("test_path", ["C:\\", r"C:\path\file.toml", r"//server/share/path/file.toml"])
 def test_url_to_windows_path(test_path):
     """Verify that Path to URL to Path conversion preserves the path."""
     path = WindowsPath(test_path)
@@ -90,14 +80,7 @@ def test_url_to_windows_path(test_path):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX-only test")
-@pytest.mark.parametrize(
-    "test_path",
-    [
-        "/",
-        "/path/to/file.toml",
-        "//double/slash/path.toml",
-    ],
-)
+@pytest.mark.parametrize("test_path", ["/", "/path/to/file.toml", "//double/slash/path.toml"])
 def test_url_to_posix_path(test_path):
     """Verify that Path to URL to Path conversion preserves the path."""
     path = PosixPath(test_path)
@@ -139,13 +122,9 @@ def test_glob_local_gitignore(some_directory: Path) -> None:
         some_directory / "README.md",
         some_directory / "src" / "module.py",
     }
-    assert set(glob_non_ignored_files(some_directory, "*.md")) == {
-        some_directory / "README.md",
-    }
+    assert set(glob_non_ignored_files(some_directory, "*.md")) == {some_directory / "README.md"}
     assert set(glob_non_ignored_files(some_directory, "*.txt")) == set()
-    assert set(glob_non_ignored_files(some_directory, "**/*.py")) == {
-        some_directory / "src" / "module.py",
-    }
+    assert set(glob_non_ignored_files(some_directory, "**/*.py")) == {some_directory / "src" / "module.py"}
 
 
 @pytest.mark.parametrize("some_directory", ["no_git_dir"], indirect=True)
@@ -178,12 +157,7 @@ def test_glob_global_gitignore(some_directory: Path) -> None:
     ],
 )
 @mock.patch("subprocess.check_output")
-def test_error_when_calling_git_config(
-    mock_check_output,
-    capsys,
-    exception: Exception,
-    message: str,
-) -> None:
+def test_error_when_calling_git_config(mock_check_output, capsys, exception: Exception, message: str) -> None:
     """Test error when calling git config."""
     mock_check_output.side_effect = exception
     assert get_global_gitignore_path() is None
@@ -194,22 +168,10 @@ def test_error_when_calling_git_config(
 @pytest.mark.parametrize(
     ("filepath", "expected_tags"),
     [
-        (
-            "foo/.pylintrc.toml",
-            {"pylintrc", "text", "toml"},
-        ),
-        (
-            "foo/pylintrc.toml",
-            {"pylintrc", "text", "toml"},
-        ),
-        (
-            "foo/.pylintrc",
-            {"pylintrc", "text", "ini"},
-        ),
-        (
-            "foo/pylintrc",
-            {"pylintrc", "text", "ini"},
-        ),
+        ("foo/.pylintrc.toml", {"pylintrc", "text", "toml"}),
+        ("foo/pylintrc.toml", {"pylintrc", "text", "toml"}),
+        ("foo/.pylintrc", {"pylintrc", "text", "ini"}),
+        ("foo/pylintrc", {"pylintrc", "text", "ini"}),
     ],
 )
 def test_different_types_of_pylintrc_config_should_work(filepath: str, expected_tags: set[str]):
