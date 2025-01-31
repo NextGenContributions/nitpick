@@ -338,36 +338,27 @@ Quickstart
 Install
 ~~~~~~~
 
+We plan to port our fixes/enhancements from ``develop-ng`` branch to upstream at a later time. Until then, you need to install our version of ``nitpick`` directly from the GitHub repository:
+
 Install in an isolated global environment with
 `pipx <https://github.com/pipxproject/pipx>`_::
 
-    # Latest PyPI release
-    pipx install nitpick
-
     # Development branch from GitHub
-    pipx install git+https://github.com/andreoliwa/nitpick
+    pipx install git+https://github.com/NextGenContributions/nitpick
 
-On macOS/Linux, install with
-`Homebrew <https://github.com/Homebrew/brew>`_::
-
-    # Latest PyPI release
-    brew install andreoliwa/formulae/nitpick
-
-    # Development branch from GitHub
-    brew install andreoliwa/formulae/nitpick --HEAD
-
-On Arch Linux, install with yay::
-
-    yay -Syu nitpick
-
-Add to your project with
+Or add to your project with
 `Poetry <https://github.com/python-poetry/poetry>`_::
 
-    poetry add --dev nitpick
+    poetry add --dev git+https://github.com/NextGenContributions/nitpick
+
+Or add to your project with
+`uv <https://github.com/astral-sh/uv>`_::
+
+    uv add --dev git+https://github.com/NextGenContributions/nitpick
 
 Or install it with pip::
 
-    pip install -U nitpick
+    pip install -U git+https://github.com/NextGenContributions/nitpick
 
 Run
 ~~~
