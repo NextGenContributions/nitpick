@@ -36,14 +36,14 @@ lint:
       paths:
         - "*.egg"
         - "*.egg-info/**"
-        - ".eggs/**"
-        - ".git/**"
-        - ".tox/**"
-        - ".venv/**"
-        - "__pycache__/**"
-        - "bin/**"
-        - "build/**"
-        - "dist/**"
+        - .eggs/**
+        - .git/**
+        - .tox/**
+        - .venv/**
+        - __pycache__/**
+        - bin/**
+        - build/**
+        - dist/**
         # Test files
-        - "test_*.py"
-        - "tests/**"
+        - test_*.py
+        - tests/**
