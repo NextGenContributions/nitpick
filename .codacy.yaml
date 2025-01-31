@@ -1,0 +1,45 @@
+---
+engines:
+  bandit: # Python security analyzer
+    enabled: true
+  hadolint: # Docker linter
+    enabled: true
+  prospector: # Python static analysis tool
+    enabled: true
+  pylintpython3: # Python linter
+    enabled: true
+  jacksonlinter: # JSON linter
+    enabled: true
+  markdownlint: # Markdown linter
+    enabled: true
+  semgrep: # Generic static analysis tool
+    enabled: true
+  shellcheck: # Shell script linter
+    enabled: true
+  spectral: # JSON/YAML linter
+    enabled: true
+  duplication: # Duplicated code detection
+    minTokenMatch: 50
+    skipLexicalErrors: true
+    ignoreLiterals: true
+    ignoreIdentifiers: true
+    ignoreAnnotations: true
+    ignoreUsings: true
+    exclude_paths:
+      - test_*.py
+      - tests/**
+
+exclude_paths:
+  - "*.egg"
+  - "*.egg-info/**"
+  - .eggs/**
+  - .git/**
+  - .tox/**
+  - .venv/**
+  - __pycache__/**
+  - bin/**
+  - build/**
+  - dist/**
+  # Test files
+  - test_*.py
+  - tests/**

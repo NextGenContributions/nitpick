@@ -1,0 +1,49 @@
+# This file controls the behavior of Trunk: https://docs.trunk.io/cli
+# To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
+version: 0.1
+cli:
+  version: 1.22.9
+# Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
+plugins:
+  sources:
+    - id: trunk
+      ref: v1.6.7
+      uri: https://github.com/trunk-io/plugins
+# Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
+runtimes:
+  enabled:
+    - python@>=3.10.8
+# This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
+lint:
+  enabled:
+    - actionlint@1.7.7
+    - bandit@1.8.2
+    - git-diff-check
+    - markdownlint@0.44.0
+    - mypy@1.14.1
+    - osv-scanner@1.9.2
+    - prettier@3.4.2
+    - pylint@3.3.4
+    - renovate@39.141.0
+    - ruff@0.9.3
+    - shellcheck@0.10.0
+    - shfmt@3.6.0
+    - taplo@0.9.3
+    - trufflehog@3.88.3
+    - yamllint@1.35.1
+  ignore:
+    - linters: [ALL]
+      paths:
+        - "*.egg"
+        - "*.egg-info/**"
+        - .eggs/**
+        - .git/**
+        - .tox/**
+        - .venv/**
+        - __pycache__/**
+        - bin/**
+        - build/**
+        - dist/**
+        # Test files
+        - test_*.py
+        - tests/**
