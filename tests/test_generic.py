@@ -21,6 +21,7 @@ from nitpick.generic import (
     glob_non_ignored_files,
     relative_to_current_dir,
 )
+from nitpick.plugins import FileInfo
 
 
 @mock.patch.object(Path, "cwd")
@@ -73,14 +74,7 @@ def test_relative_to_current_dir(home, cwd):
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows-only test")
-@pytest.mark.parametrize(
-    "test_path",
-    [
-        "C:\\",
-        r"C:\path\file.toml",
-        r"//server/share/path/file.toml",
-    ],
-)
+@pytest.mark.parametrize("test_path", ["C:\\", r"C:\path\file.toml", r"//server/share/path/file.toml"])
 def test_url_to_windows_path(test_path):
     """Verify that Path to URL to Path conversion preserves the path."""
     path = WindowsPath(test_path)
@@ -89,14 +83,7 @@ def test_url_to_windows_path(test_path):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX-only test")
-@pytest.mark.parametrize(
-    "test_path",
-    [
-        "/",
-        "/path/to/file.toml",
-        "//double/slash/path.toml",
-    ],
-)
+@pytest.mark.parametrize("test_path", ["/", "/path/to/file.toml", "//double/slash/path.toml"])
 def test_url_to_posix_path(test_path):
     """Verify that Path to URL to Path conversion preserves the path."""
     path = PosixPath(test_path)
@@ -138,13 +125,9 @@ def test_glob_local_gitignore(some_directory: Path) -> None:
         some_directory / "README.md",
         some_directory / "src" / "module.py",
     }
-    assert set(glob_non_ignored_files(some_directory, "*.md")) == {
-        some_directory / "README.md",
-    }
+    assert set(glob_non_ignored_files(some_directory, "*.md")) == {some_directory / "README.md"}
     assert set(glob_non_ignored_files(some_directory, "*.txt")) == set()
-    assert set(glob_non_ignored_files(some_directory, "**/*.py")) == {
-        some_directory / "src" / "module.py",
-    }
+    assert set(glob_non_ignored_files(some_directory, "**/*.py")) == {some_directory / "src" / "module.py"}
 
 
 @pytest.mark.parametrize("some_directory", ["no_git_dir"], indirect=True)
@@ -177,14 +160,31 @@ def test_glob_global_gitignore(some_directory: Path) -> None:
     ],
 )
 @mock.patch("subprocess.check_output")
-def test_error_when_calling_git_config(
-    mock_check_output,
-    capsys,
-    exception: Exception,
-    message: str,
-) -> None:
+def test_error_when_calling_git_config(mock_check_output, capsys, exception: Exception, message: str) -> None:
     """Test error when calling git config."""
     mock_check_output.side_effect = exception
     assert get_global_gitignore_path() is None
     captured = capsys.readouterr()
     assert captured.err.strip().casefold() == message.strip().casefold()
+
+
+@pytest.mark.parametrize(
+    ("filepath", "expected_tags"),
+    [
+        ("foo/.pylintrc.toml", {"pylintrc", "text", "toml"}),
+        ("foo/pylintrc.toml", {"pylintrc", "text", "toml"}),
+        ("foo/.pylintrc", {"pylintrc", "text", "ini"}),
+        ("foo/pylintrc", {"pylintrc", "text", "ini"}),
+    ],
+)
+def test_different_types_of_pylintrc_config_should_work(filepath: str, expected_tags: set[str]):
+    """Different pylintrc configs should have different expected tags.
+
+    'pylintrc' is a special case where the config can either be a TOML or INI file.
+    Determining the correct tags is important for the plugins to work correctly.
+    Having an incorrect plugin working on a file can lead to unexpected results.
+
+    More on how pylint search for and use configuration files:
+    https://pylint.pycqa.org/en/latest/user_guide/usage/run.html#command-line-options
+    """
+    assert FileInfo.tags_from_filename(filepath) == expected_tags

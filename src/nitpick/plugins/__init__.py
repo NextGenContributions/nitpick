@@ -13,15 +13,15 @@ from typing import TYPE_CHECKING
 import pluggy
 
 from nitpick.constants import PROJECT_NAME
+from nitpick.plugins.info import FileInfo
 
 if TYPE_CHECKING:
     from nitpick.plugins.base import NitpickPlugin
-    from nitpick.plugins.info import FileInfo
 
 hookspec = pluggy.HookspecMarker(PROJECT_NAME)
 hookimpl = pluggy.HookimplMarker(PROJECT_NAME)
 
-__all__ = ("hookimpl", "hookspec")
+__all__ = ("FileInfo", "hookimpl", "hookspec")
 
 
 @hookspec
