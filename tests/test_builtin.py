@@ -47,7 +47,7 @@ BUILTIN_STYLE_EXTRA_VIOLATIONS: dict[str, list[Fuss]] = {
             " should exist: Create the file with the contents below, then run 'pre-commit install'",
             "",
         )
-    ],
+    ]
 }
 
 
@@ -64,8 +64,7 @@ def test_packages_named_after_identify_tags():
 
 
 @pytest.mark.parametrize(
-    "relative_path",
-    sorted(str(s.relative_to(RESOURCES_DIR)) for s in builtin_styles() if "presets" not in s.parts),
+    "relative_path", sorted(str(s.relative_to(RESOURCES_DIR)) for s in builtin_styles() if "presets" not in s.parts)
 )
 def test_each_builtin_style(tmp_path, datadir, relative_path):
     """Test each built-in style (skip presets)."""
@@ -150,6 +149,4 @@ def test_pre_commit_with_multiple_repos_should_not_change_if_repos_exist(tmp_pat
         datadir / "real.toml"
     ).api_check_then_fix(partial_names=[PRE_COMMIT_CONFIG_YAML]).assert_file_contents(
         PRE_COMMIT_CONFIG_YAML, datadir / "real.yaml"
-    ).api_check(
-        PRE_COMMIT_CONFIG_YAML
-    ).assert_violations()
+    ).api_check(PRE_COMMIT_CONFIG_YAML).assert_violations()

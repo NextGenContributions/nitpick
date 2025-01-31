@@ -28,10 +28,8 @@ def test_repo_should_be_added_not_replaced(tmp_path, datadir):
                       - --remove-duplicate-keys
                       - --ignore-init-module-imports
             """,
-        ),
-    ).assert_file_contents(
-        PRE_COMMIT_CONFIG_YAML, datadir / "uk-default-expected.yaml"
-    ).api_check().assert_violations()
+        )
+    ).assert_file_contents(PRE_COMMIT_CONFIG_YAML, datadir / "uk-default-expected.yaml").api_check().assert_violations()
 
 
 def test_overriding_list_key_with_empty_string_restores_default_behaviour(tmp_path, datadir):
@@ -59,10 +57,8 @@ def test_overriding_list_key_with_empty_string_restores_default_behaviour(tmp_pa
                       - --remove-duplicate-keys
                       - --ignore-init-module-imports
             """,
-        ),
-    ).assert_file_contents(
-        PRE_COMMIT_CONFIG_YAML, datadir / "uk-empty-expected.yaml"
-    ).api_check().assert_violations()
+        )
+    ).assert_file_contents(PRE_COMMIT_CONFIG_YAML, datadir / "uk-empty-expected.yaml").api_check().assert_violations()
 
 
 def test_use_another_attribute_as_unique_key(tmp_path, datadir):
@@ -113,9 +109,7 @@ def test_repo_with_missing_key_value_pairs(tmp_path, datadir):
                     last: key
             """,
         )
-    ).assert_file_contents(
-        PRE_COMMIT_CONFIG_YAML, datadir / "hook-args-add.yaml"
-    ).api_check().assert_violations()
+    ).assert_file_contents(PRE_COMMIT_CONFIG_YAML, datadir / "hook-args-add.yaml").api_check().assert_violations()
 
 
 def test_repo_with_different_key_value_pairs(tmp_path, datadir):
@@ -144,6 +138,4 @@ def test_repo_with_different_key_value_pairs(tmp_path, datadir):
                       - black==22.1
             """,
         )
-    ).assert_file_contents(
-        PRE_COMMIT_CONFIG_YAML, datadir / "hook-args-change.yaml"
-    ).api_check().assert_violations()
+    ).assert_file_contents(PRE_COMMIT_CONFIG_YAML, datadir / "hook-args-change.yaml").api_check().assert_violations()

@@ -171,9 +171,7 @@ def test_missing_repos(tmp_path):
         - hooks:
           - id: whatever
         """
-    ).api_check_then_fix(
-        Fuss(True, PRE_COMMIT_CONFIG_YAML, 368, " has missing values:", "fail_fast: true")
-    )
+    ).api_check_then_fix(Fuss(True, PRE_COMMIT_CONFIG_YAML, 368, " has missing values:", "fail_fast: true"))
 
 
 def test_missing_repo_key(tmp_path):
@@ -199,7 +197,7 @@ def test_missing_repo_key(tmp_path):
             repos:
               - grepo: glocal
             """,
-        ),
+        )
     ).assert_file_contents(
         PRE_COMMIT_CONFIG_YAML,
         """
@@ -436,13 +434,9 @@ def test_missing_different_values(tmp_path, datadir, shared_datadir):
         [tool.nitpick]
         style = ["root", "mypy", "pre-commit/python", "pre-commit/bash"]
         """
-    ).pre_commit(
-        datadir / "2-untouched-pre-commit.yaml"
-    ).api_check_then_fix(
-        partial_names=[PRE_COMMIT_CONFIG_YAML],
-    ).assert_file_contents(
-        PRE_COMMIT_CONFIG_YAML, datadir / "2-untouched-pre-commit.yaml"
-    )
+    ).pre_commit(datadir / "2-untouched-pre-commit.yaml").api_check_then_fix(
+        partial_names=[PRE_COMMIT_CONFIG_YAML]
+    ).assert_file_contents(PRE_COMMIT_CONFIG_YAML, datadir / "2-untouched-pre-commit.yaml")
 
 
 def test_pre_commit_section_without_dot_deprecated(tmp_path):

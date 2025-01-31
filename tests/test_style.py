@@ -55,9 +55,7 @@ def test_multiple_styles_overriding_values(offline, tmp_path):
         [tool.black]
         something = 22
         """
-    ).flake8(
-        offline=offline
-    ).assert_errors_contain(
+    ).flake8(offline=offline).assert_errors_contain(
         f"""
         NIP318 File pyproject.toml has missing values:{SUGGESTION_BEGIN}
         [tool.black]
@@ -136,9 +134,7 @@ def test_include_styles_overriding_values(offline, tmp_path):
         [tool.nitpick]
         style = "isort1"
         """
-    ).flake8(
-        offline=offline
-    ).assert_errors_contain(
+    ).flake8(offline=offline).assert_errors_contain(
         f"""
         NIP318 File pyproject.toml has missing values:{SUGGESTION_BEGIN}
         [tool.black]
@@ -185,9 +181,7 @@ def test_minimum_version(mocked_version, offline, tmp_path):
         [tool.black]
         line-length = 100
         """
-    ).flake8(
-        offline=offline
-    ).assert_single_error(
+    ).flake8(offline=offline).assert_single_error(
         "NIP203 The style file you're using requires nitpick>=1.0 (you have 0.5.3). Please upgrade"
     )
 
@@ -286,16 +280,12 @@ def test_symlink_subdir(offline, tmp_path):
         ["pyproject.toml".tool.black]
         line-length = 86
         """,
-    ).create_symlink(
-        "symlinked-style.toml", target_dir, "parent.toml"
-    ).pyproject_toml(
+    ).create_symlink("symlinked-style.toml", target_dir, "parent.toml").pyproject_toml(
         """
         [tool.nitpick]
         style = "symlinked-style"
         """
-    ).flake8(
-        offline=offline
-    ).assert_single_error(
+    ).flake8(offline=offline).assert_single_error(
         f"""
         NIP318 File pyproject.toml has missing values:{SUGGESTION_BEGIN}
         [tool.black]
@@ -666,9 +656,7 @@ def test_merge_styles_into_single_file(offline, tmp_path):
         [tool.nitpick]
         style = ["black", "isort", "isort_overrides"]
         """
-    ).flake8(
-        offline=offline
-    ).assert_merged_style(
+    ).flake8(offline=offline).assert_merged_style(
         f'''
         ["pyproject.toml".tool.black]
         line-length = 120
@@ -774,9 +762,7 @@ def test_invalid_nitpick_files(offline, tmp_path):
         [tool.nitpick]
         style = ["some_style", "wrong_files"]
         """
-    ).flake8(
-        offline=offline
-    ).assert_errors_contain(
+    ).flake8(offline=offline).assert_errors_contain(
         f"""
         NIP001 File some_style.toml has an incorrect style. Invalid config:{SUGGESTION_BEGIN}
         xxx: Unknown file. See {READ_THE_DOCS_URL}plugins.html.{SUGGESTION_END}

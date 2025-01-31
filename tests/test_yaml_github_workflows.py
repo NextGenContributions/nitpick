@@ -31,10 +31,8 @@ def test_list_of_dicts_search_missing_element_by_key_and_change_add_element_indi
                   - name: Install tox
                     run: python -m pip install tox
             """,
-        ),
-    ).assert_file_contents(
-        filename, datadir / "dict-search-by-key-expected.yaml"
-    ).api_check().assert_violations()
+        )
+    ).assert_file_contents(filename, datadir / "dict-search-by-key-expected.yaml").api_check().assert_violations()
 
 
 def test_list_of_scalars_only_add_elements_that_do_not_exist(tmp_path, datadir):
@@ -63,7 +61,7 @@ def test_list_of_scalars_only_add_elements_that_do_not_exist(tmp_path, datadir):
                       - '3.11'
                       - '3.12'
             """,
-        ),
+        )
     ).assert_file_contents(
         filename, datadir / "scalar-add-elements-that-do-not-exist-expected.yaml"
     ).api_check().assert_violations()
@@ -98,10 +96,8 @@ def test_wildcard_expression_matches_multiple_keys(tmp_path, datadir):
                   - name: Checkout
                     uses: actions/checkout@v2
             """,
-        ),
-    ).assert_file_contents(
-        filename, datadir / "wildcard-expected.yaml"
-    ).api_check().assert_violations()
+        )
+    ).assert_file_contents(filename, datadir / "wildcard-expected.yaml").api_check().assert_violations()
 
 
 def test_steps_are_present_in_any_order(tmp_path, datadir):
@@ -134,6 +130,4 @@ def test_more_than_one_element_with_the_same_key_only_first_one_will_be_consider
                     uses: actions/replacing-duplicated-element@v2
             """,
         )
-    ).assert_file_contents(
-        filename, datadir / "same-key-expected.yaml"
-    ).api_check().assert_violations()
+    ).assert_file_contents(filename, datadir / "same-key-expected.yaml").api_check().assert_violations()

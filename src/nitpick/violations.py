@@ -75,10 +75,7 @@ class StyleViolations(ViolationEnum):
 class ProjectViolations(ViolationEnum):
     """Project initialization violations."""
 
-    NO_ROOT_DIR = (
-        101,
-        f"No root directory detected.{CONFIG_RUN_NITPICK_INIT_OR_CONFIGURE_STYLE_MANUALLY}",
-    )
+    NO_ROOT_DIR = (101, f"No root directory detected.{CONFIG_RUN_NITPICK_INIT_OR_CONFIGURE_STYLE_MANUALLY}")
     NO_PYTHON_FILE = (102, "No Python file was found on the root dir and subdir of {root!r}")
     MISSING_FILE = (103, " should exist{extra}")
     FILE_SHOULD_BE_DELETED = (104, " should be deleted{extra}")
