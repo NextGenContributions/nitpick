@@ -6,7 +6,7 @@ from unittest import mock
 from configupdater import ConfigUpdater
 
 from nitpick.constants import EDITOR_CONFIG, PYTHON_SETUP_CFG
-from nitpick.plugins.ini import IniPlugin, Violations
+from nitpick.plugins.ini import COMMA_SEPARATED_VALUES, IniPlugin, Violations
 from nitpick.violations import Fuss, SharedViolations
 from tests.helpers import ProjectMock
 
@@ -20,8 +20,8 @@ def test_comma_separated_keys_on_style_file(tmp_path):
     """Comma separated keys on the style file."""
     ProjectMock(tmp_path).style(
         f"""
-        [nitpick.files."{PYTHON_SETUP_CFG}"]
-        comma_separated_values = ["food.eat", "food.drink"]
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        "{PYTHON_SETUP_CFG}" = ["food.eat", "food.drink"]
 
         ["{PYTHON_SETUP_CFG}".food]
         eat = "salt,ham,eggs"
@@ -316,8 +316,8 @@ def test_invalid_configuration_comma_separated_values(tmp_path):
         ignore = "D100,D101,D102,D103,D104,D105,D106,D107,D202,E203,W503"
         select = "E241,C,E,F,W,B,B9"
 
-        [nitpick.files."{PYTHON_SETUP_CFG}"]
-        comma_separated_values = ["flake8.ignore", "flake8.exclude"]
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        "{PYTHON_SETUP_CFG}" = ["flake8.ignore", "flake8.exclude"]
         """
     ).api_check().assert_violations(
         Fuss(
@@ -340,8 +340,8 @@ def test_invalid_section_dot_fields(tmp_path):
     """Test invalid section/field pairs."""
     ProjectMock(tmp_path).style(
         f"""
-        [nitpick.files."{PYTHON_SETUP_CFG}"]
-        comma_separated_values = ["no_dot", "multiple.dots.here", ".filed_only", "section_only."]
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        "{PYTHON_SETUP_CFG}" = ["no_dot", "multiple.dots.here", ".filed_only", "section_only."]
         """
     ).setup_cfg("").api_check().assert_violations(
         Fuss(
@@ -350,10 +350,10 @@ def test_invalid_section_dot_fields(tmp_path):
             1,
             " has an incorrect style. Invalid config:",
             f"""
-            nitpick.files."{PYTHON_SETUP_CFG}".comma_separated_values.0: Dot is missing. Use <section_name>.<field_name>
-            nitpick.files."{PYTHON_SETUP_CFG}".comma_separated_values.1: There's more than one dot. Use <section_name>.<field_name>
-            nitpick.files."{PYTHON_SETUP_CFG}".comma_separated_values.2: Empty section name. Use <section_name>.<field_name>
-            nitpick.files."{PYTHON_SETUP_CFG}".comma_separated_values.3: Empty field name. Use <section_name>.<field_name>
+            nitpick.files.{COMMA_SEPARATED_VALUES}."{PYTHON_SETUP_CFG}".value.0: Dot is missing. Use <section_name>.<field_name>
+            nitpick.files.{COMMA_SEPARATED_VALUES}."{PYTHON_SETUP_CFG}".value.1: There's more than one dot. Use <section_name>.<field_name>
+            nitpick.files.{COMMA_SEPARATED_VALUES}."{PYTHON_SETUP_CFG}".value.2: Empty section name. Use <section_name>.<field_name>
+            nitpick.files.{COMMA_SEPARATED_VALUES}."{PYTHON_SETUP_CFG}".value.3: Empty field name. Use <section_name>.<field_name>
             """,
         )
     )
@@ -368,8 +368,8 @@ def test_invalid_sections_comma_separated_values(tmp_path):
         exclude = "venv*,**/migrations/"
         per-file-ignores = "tests/**.py:FI18,setup.py:FI18"
 
-        [nitpick.files."{PYTHON_SETUP_CFG}"]
-        comma_separated_values = ["flake8.ignore", "flake8.exclude", "falek8.per-file-ignores", "aaa.invalid-section"]
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        "{PYTHON_SETUP_CFG}" = ["flake8.ignore", "flake8.exclude", "falek8.per-file-ignores", "aaa.invalid-section"]
         """
     ).setup_cfg(
         """

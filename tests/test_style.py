@@ -784,7 +784,7 @@ def test_invalid_nitpick_files(offline, tmp_path):
     ).assert_errors_contain(
         f"""
         NIP001 File wrong_files.toml has an incorrect style. Invalid config:{SUGGESTION_BEGIN}
-        nitpick.files.whatever: Unknown file. See {READ_THE_DOCS_URL}nitpick_section.html#nitpick-files.{SUGGESTION_END}
+        nitpick.files.whatever: Unknown configuration. See {READ_THE_DOCS_URL}nitpick_section.html#nitpick-files.{SUGGESTION_END}
         """,
         2,
     )
@@ -961,3 +961,45 @@ def test_protocol_not_supported(tmp_path):
     with pytest.raises(RuntimeError) as exc_info:
         project.api_check()
     assert str(exc_info.value) == "URL protocol 'abc' is not supported"
+
+
+def test_old_comma_separated_values_config_should_be_invalid(tmp_path):
+    """Invalid [nitpick.files] section."""
+    ProjectMock(tmp_path).named_style(
+        "some_style",
+        """
+        [nitpick.files.".flake8"]
+        comma_separated_values = [
+           "flake8.ignore",
+        ]
+        """,
+    ).pyproject_toml(
+        """
+        [tool.nitpick]
+        style = ["some_style"]
+        """
+    ).flake8().assert_errors_contain(
+        f"""
+        NIP001 File some_style.toml has an incorrect style. Invalid config:{SUGGESTION_BEGIN}
+        nitpick.files.".flake8": Unknown configuration. See {READ_THE_DOCS_URL}nitpick_section.html#nitpick-files.{SUGGESTION_END}
+        """,
+        1,
+    )
+
+
+def test_new_comma_separated_values_config_should_be_valid(tmp_path):
+    """Valid [nitpick.files] section."""
+    ProjectMock(tmp_path).named_style(
+        "some_style",
+        """
+        [nitpick.files.comma_separated_values]
+        ".flake8" = [
+           "flake8.ignore",
+        ]
+        """,
+    ).pyproject_toml(
+        """
+        [tool.nitpick]
+        style = ["some_style"]
+        """
+    ).flake8().assert_no_errors()

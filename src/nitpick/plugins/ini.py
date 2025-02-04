@@ -11,6 +11,7 @@ from configupdater import ConfigUpdater, Space
 
 from nitpick.plugins import hookimpl
 from nitpick.plugins.base import NitpickPlugin
+from nitpick.typedefs import JsonDict, mypy_property
 from nitpick.violations import Fuss, ViolationEnum
 
 if TYPE_CHECKING:
@@ -55,10 +56,15 @@ class IniPlugin(NitpickPlugin):
     updater: ConfigUpdater
     comma_separated_values: set[str]
 
+    @mypy_property
+    def comma_separated_values_dict(self) -> JsonDict:
+        """TOML dict of files which define which config entry is a list of comma separated values."""
+        return self.info.project.nitpick_files_section.get(COMMA_SEPARATED_VALUES, {})
+
     def post_init(self):
         """Post initialization after the instance was created."""
         self.updater = ConfigUpdater()
-        self.comma_separated_values = set(self.nitpick_file_dict.get(COMMA_SEPARATED_VALUES, []))
+        self.comma_separated_values = set(self.comma_separated_values_dict.get(self.filename, []))
 
         if not self.needs_top_section:
             return
