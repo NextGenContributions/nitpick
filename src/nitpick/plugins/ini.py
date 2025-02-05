@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from configparser import ConfigParser, DuplicateOptionError, Error, MissingSectionHeaderError, ParsingError
 from io import StringIO
 from typing import TYPE_CHECKING, Any, ClassVar, Iterator
@@ -202,11 +203,88 @@ class IniPlugin(NitpickPlugin):
         for diff_type, key, values in dictdiffer.diff(actual_dict, expected_dict):
             if diff_type == dictdiffer.CHANGE:
                 if f"{section}.{key}" in self.comma_separated_values:
-                    yield from self.enforce_comma_separated_values(section, key, values[0], values[1])
+                    if isinstance(values[1], dict):
+                        # The expected value is a dictionary, so it's a multiline value
+                        # make sure the actual value is also a dictionary
+                        lines = values[0].strip().split("\n")
+                        actual = {key: value for line in lines for key, value in [line.split(":")]}
+                        expected = values[1]
+                        yield from self.enforce_comma_separated_values_multiline(section, key, actual, expected)
+                    else:
+                        yield from self.enforce_comma_separated_values(section, key, values[0], values[1])
                 else:
                     yield from self.compare_different_keys(section, key, values[0], values[1])
             elif diff_type == dictdiffer.ADD:
                 yield from self.show_missing_keys(section, values)
+
+    def enforce_comma_separated_values_multiline(
+        self, section, key, raw_actual: dict[str, str], raw_expected: dict[str, str]
+    ) -> Iterator[Fuss]:
+        """Enforce sections and keys with comma-separated values.
+
+        The values might contain spaces.
+        """
+        # This dict is passed around for modifying if autofix is enabled
+        raw_actual_fixed = copy.deepcopy(raw_actual)
+
+        for diff_type, option, values in dictdiffer.diff(raw_actual, raw_expected):
+            if isinstance(option, list):
+                # 'dictdiffer.diff' supports dot notation for nested keys and thus might return a list if the key has a dot '.' in it.
+                # We don't support more than two levels of nested keys in this INI plugin. This check is only precautionary for key that contains '.'
+                option = option[0]  # noqa: PLW2901
+
+            if diff_type == dictdiffer.CHANGE:
+                yield from self._add_missing_values_in_existing_option_of_multiline_config_value(
+                    key, raw_actual_fixed, section, option, values
+                )
+            elif diff_type == dictdiffer.ADD:
+                yield from self._add_missing_option_in_multiline_config_value(key, raw_actual_fixed, section, values)
+
+        if self.autofix:
+            list_of_key_value_pairs = [f"{k}:{v}" for k, v in raw_actual_fixed.items()]
+            self.updater[section][key].set_values(list_of_key_value_pairs, indent=2 * " ")
+            self.dirty = True
+
+    def _add_missing_option_in_multiline_config_value(
+        self, key: str, raw_actual_fixed: dict[str, str], section: str, missing_options: list[tuple[str, str]]
+    ):
+        """Add a missing option in a multiline configuration value."""
+        section_header = "" if section == TOP_SECTION else f"[{section}]\n"
+        for option, value in missing_options:
+            if self.autofix:
+                raw_actual_fixed[option] = value
+            yield self.reporter.make_fuss(
+                Violations.MISSING_OPTION,
+                f'{section_header}{key} = (...)\n"{option}":{value}',
+                key=f'{key}."{option}"',
+                fixed=self.autofix,
+                section=section,
+            )
+
+    def _add_missing_values_in_existing_option_of_multiline_config_value(  # pylint: disable=too-many-arguments
+        self, key: str, raw_actual_fixed: dict[str, str], section: str, option: str, values: tuple[str, str]
+    ):
+        """Add missing values in an existing option of a multiline configuration value."""
+        actual = values[0]
+        expected = values[1]
+
+        actual_set = {s.strip() for s in actual.split(",")}
+        expected_set = {s.strip() for s in expected.split(",")}
+        missing = expected_set - actual_set
+        if not missing:
+            return
+
+        joined_values = ",".join(sorted(missing))
+        value_to_append = f",{joined_values}"
+        if self.autofix:
+            raw_actual_fixed[option] += value_to_append
+        section_header = "" if section == TOP_SECTION else f"[{section}]\n"
+        yield self.reporter.make_fuss(
+            Violations.MISSING_VALUES_IN_LIST,
+            f'{section_header}{key} = (...)\n"{option}":(...){value_to_append}',
+            key=f'{key}."{option}"',
+            fixed=self.autofix,
+        )
 
     def enforce_comma_separated_values(self, section, key, raw_actual: Any, raw_expected: Any) -> Iterator[Fuss]:
         """Enforce sections and keys with comma-separated values.
@@ -270,9 +348,21 @@ class IniPlugin(NitpickPlugin):
         """Show the keys that are not present in a section."""
         parser = ConfigParser()
         missing_dict = dict(values)
-        parser[section] = missing_dict
+
+        # Create a new dictionary to store the updated options
+        updated_missing_dict = {}
+        for key, value in missing_dict.items():
+            if isinstance(value, dict):
+                # Handle multiline config value by converting a dict to a string with the format:
+                # "\n  key1:value1\n  key2:value2"  # noqa: ERA001
+                sep = "\n  "
+                updated_missing_dict[key] = sep + sep.join(f"{k}:{v}" for k, v in value.items())
+            else:
+                updated_missing_dict[key] = value
+
+        parser[section] = updated_missing_dict
         output = self.get_example_cfg(parser)
-        self.add_options_before_space(section, missing_dict)
+        self.add_options_before_space(section, updated_missing_dict)
 
         if section == TOP_SECTION:
             yield self.reporter.make_fuss(

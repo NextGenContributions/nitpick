@@ -60,6 +60,24 @@ Multiple keys can be added.
     [nitpick.files.comma_separated_values]
     "setup.cfg" = ["flake8.ignore", "isort.some_key", "another_section.another_key"]
 
+For config values in INI file that span across multiple lines such as ``flake8.per-file-ignores``, then ``per-file-ignores`` should be added to the list of comma separated values as well as being nested under ``flake8`` section in the style file.
+
+.. code-block:: toml
+
+    [nitpick.files.comma_separated_values]
+    ".flake8" = ["flake8.per-file-ignores"]
+
+    [".flake8".flake8.per-file-ignores]
+    "tests/*.py" = "WPS116,WPS118,WPS2"
+    "tests_2/*.py" = "WPS116,WPS118,WPS218"
+
+.. code-block:: ini
+
+    per-file-ignores =
+      tests/*.py:WPS116,WPS118,WPS2
+      tests_2/*.py:WPS118,WPS218,WPS116
+
+
 [nitpick.styles]
 ----------------
 
