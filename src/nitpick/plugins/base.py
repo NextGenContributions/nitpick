@@ -9,10 +9,9 @@ from typing import TYPE_CHECKING, ClassVar, Iterator
 from autorepr import autotext
 from loguru import logger
 
-from nitpick.blender import BaseDoc, flatten_quotes, search_json
+from nitpick.blender import BaseDoc, flatten_quotes
 from nitpick.config import SpecialConfig
 from nitpick.constants import CONFIG_DUNDER_LIST_KEYS
-from nitpick.typedefs import JsonDict, mypy_property
 from nitpick.violations import Fuss, Reporter, SharedViolations
 
 if TYPE_CHECKING:
@@ -21,6 +20,7 @@ if TYPE_CHECKING:
     from marshmallow import Schema
 
     from nitpick.plugins.info import FileInfo
+    from nitpick.typedefs import JsonDict
 
 
 class NitpickPlugin(metaclass=abc.ABCMeta):  # pylint: disable=too-many-instance-attributes
@@ -89,23 +89,11 @@ class NitpickPlugin(metaclass=abc.ABCMeta):  # pylint: disable=too-many-instance
         """
         return SpecialConfig()
 
-    @mypy_property
-    def nitpick_file_dict(self) -> JsonDict:
-        """Nitpick configuration for this file as a TOML dict, taken from the style file."""
-        return search_json(self.info.project.nitpick_section, f'files."{self.filename}"', {})
-
     def entry_point(self) -> Iterator[Fuss]:
         """Entry point of the Nitpick plugin."""
         self.post_init()
 
-        should_exist: bool = bool(self.info.project.nitpick_files_section.get(self.filename, True))
-        if self.file_path.exists() and not should_exist:
-            logger.info(f"{self}: File {self.filename} exists when it should not")
-            # Only display this message if the style is valid.
-            yield self.reporter.make_fuss(SharedViolations.DELETE_FILE)
-            return
-
-        has_config_dict = bool(self.expected_config or self.nitpick_file_dict)
+        has_config_dict = bool(self.expected_config)
         if not has_config_dict:
             return
 

@@ -8,7 +8,7 @@ from sortedcontainers import SortedDict
 
 from nitpick import fields
 from nitpick.blender import flatten_quotes
-from nitpick.constants import PYTHON_SETUP_CFG, READ_THE_DOCS_URL
+from nitpick.constants import READ_THE_DOCS_URL
 
 
 def flatten_marshmallow_errors(errors: dict) -> str:
@@ -46,25 +46,18 @@ class NitpickStylesSectionSchema(BaseNitpickSchema):
     include = PolyField(deserialization_schema_selector=fields.string_or_list_field)
 
 
-class IniSchema(BaseNitpickSchema):
-    """Validation schema for INI files."""
-
-    error_messages = {  # noqa: RUF012
-        "unknown": help_message("Unknown configuration", "nitpick_section.html#comma-separated-values")
-    }
-
-    comma_separated_values = fields.List(fields.String(validate=fields.validate_section_dot_field))
-
-
 class NitpickFilesSectionSchema(BaseNitpickSchema):
     """Validation schema for the ``[nitpick.files]`` section on the style file."""
 
-    error_messages = {"unknown": help_message("Unknown file", "nitpick_section.html#nitpick-files")}  # noqa: RUF012
+    error_messages = {  # noqa: RUF012
+        "unknown": help_message("Unknown configuration", "nitpick_section.html#nitpick-files")
+    }
 
     absent = fields.Dict(fields.NonEmptyString, fields.String())
     present = fields.Dict(fields.NonEmptyString, fields.String())
-    # TODO: refactor: load this schema dynamically, then add this next field setup_cfg
-    setup_cfg = fields.Nested(IniSchema, data_key=PYTHON_SETUP_CFG)
+    comma_separated_values = fields.Dict(
+        fields.NonEmptyString, fields.List(fields.String(validate=fields.validate_section_dot_field))
+    )
 
 
 class NitpickMetaSchema(BaseNitpickSchema):

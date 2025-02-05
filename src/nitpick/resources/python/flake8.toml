@@ -24,5 +24,5 @@ additional_dependencies = ["flake8-blind-except", "flake8-bugbear", "flake8-comp
 [".codeclimate.yml".plugins.pep8]  # https://docs.codeclimate.com/docs/pep8 PEP8 already being checked by flake8 plugins on pre-commit
 enabled = false
 
-[nitpick.files."setup.cfg"]
-comma_separated_values = ["flake8.ignore", "flake8.exclude"]
+[nitpick.files.comma_separated_values]
+"setup.cfg" = ["flake8.ignore", "flake8.exclude"]

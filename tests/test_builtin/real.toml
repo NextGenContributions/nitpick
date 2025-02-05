@@ -36,5 +36,5 @@ include = [
     "py://nitpick/resources/javascript/package-json",
 ]
 
-[nitpick.files."setup.cfg"]
-comma_separated_values = ["flake8.ignore", "flake8.exclude", "isort.skip", "isort.known_first_party"]
+[nitpick.files.comma_separated_values]
+"setup.cfg" = ["flake8.ignore", "flake8.exclude", "isort.skip", "isort.known_first_party"]

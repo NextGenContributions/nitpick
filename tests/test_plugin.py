@@ -68,7 +68,7 @@ def test_missing_message(tmp_path):
             "nitpick-style.toml",
             1,
             " has an incorrect style. Invalid config:",
-            f"""nitpick.files."pyproject.toml": Unknown file. See {READ_THE_DOCS_URL}nitpick_section.html#nitpick-files.""",
+            f"""nitpick.files."pyproject.toml": Unknown configuration. See {READ_THE_DOCS_URL}nitpick_section.html#nitpick-files.""",
         )
     )
 
