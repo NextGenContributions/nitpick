@@ -301,9 +301,7 @@ def test_missing_different_values_editorconfig_with_root(tmp_path, datadir):
             another_missing = 100
             """,
         ),
-    ).assert_file_contents(
-        EDITOR_CONFIG, datadir / "2-expected-editorconfig.ini"
-    )
+    ).assert_file_contents(EDITOR_CONFIG, datadir / "2-expected-editorconfig.ini")
 
 
 def test_invalid_configuration_comma_separated_values(tmp_path):
@@ -401,9 +399,7 @@ def test_multiline_comment(tmp_path, datadir):
             new = value
             """,
         )
-    ).assert_file_contents(
-        PYTHON_SETUP_CFG, datadir / "3-expected-setup.cfg"
-    )
+    ).assert_file_contents(PYTHON_SETUP_CFG, datadir / "3-expected-setup.cfg")
 
 
 def test_duplicated_option(tmp_path):
@@ -427,9 +423,7 @@ def test_duplicated_option(tmp_path):
             f": parsing error (DuplicateOptionError): While reading from {project.path_for(PYTHON_SETUP_CFG)!r} "
             f"[line  3]: option 'easy' in section 'abc' already exists",
         )
-    ).assert_file_contents(
-        PYTHON_SETUP_CFG, original_file
-    )
+    ).assert_file_contents(PYTHON_SETUP_CFG, original_file)
 
 
 @mock.patch.object(ConfigUpdater, "update_file")
@@ -463,9 +457,7 @@ def test_simulate_parsing_error_when_saving(update_file, tmp_path):
             Violations.PARSING_ERROR.code,
             ": parsing error (ParsingError): Source contains parsing errors: 'simulating a captured error'",
         ),
-    ).assert_file_contents(
-        PYTHON_SETUP_CFG, original_file
-    )
+    ).assert_file_contents(PYTHON_SETUP_CFG, original_file)
 
 
 def test_generic_ini_with_missing_header(tmp_path):
@@ -493,9 +485,7 @@ def test_generic_ini_with_missing_header(tmp_path):
             f"file: {project.path_for('generic.ini')!r}, line: 1\n"
             "'this_key_is_invalid = for a generic .ini (it should always have a section)\\n'",
         )
-    ).assert_file_contents(
-        "generic.ini", expected_generic_ini
-    )
+    ).assert_file_contents("generic.ini", expected_generic_ini)
 
 
 def test_falsy_values_should_be_reported_and_fixed(tmp_path, datadir):
@@ -548,7 +538,7 @@ def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_
         "tests/*.py" = "WPS116,WPS118"
         "tests_2/*.py" = "WPS116,WPS118,WPS218"
         "tests_3/*.py" = "WPS116,WPS118,WPS218"
-        """,
+        """
     ).api_check_then_fix(
         Fuss(
             True,
@@ -594,7 +584,7 @@ def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_
         "tests/*.py" = "WPS116"
         "tests_2/*.py" = "WPS116,WPS118,WPS218"
         "tests_3/*.py" = "WPS116,WPS118"
-        """,
+        """
     ).api_check_then_fix(
         Fuss(
             True,
@@ -638,7 +628,7 @@ def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_
         [".flake8".flake8.per-file-ignores]
         "tests/*.py" = "WPS116,WPS118"
         "tests_2/*.py" = "WPS116,WPS118,WPS218"
-        """,
+        """
     ).api_check_then_fix(
         Fuss(
             True,
@@ -680,7 +670,7 @@ def test_comma_separated_values_in_multiline_config_value_should_be_without_viol
         [".flake8".flake8.per-file-ignores]
         "tests/*.py" = "WPS116,WPS118"
         "tests_2/*.py" = "WPS116,WPS118,WPS218"
-        """,
+        """
     ).api_check_then_fix().assert_file_contents(
         ".flake8",
         """
