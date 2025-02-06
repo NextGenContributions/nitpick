@@ -190,3 +190,94 @@ def test_falsy_values_should_be_reported_and_fixed(tmp_path, datadir):
         )
     ).assert_file_contents(filename, datadir / "falsy_values/expected.toml")
     project.api_check().assert_violations()
+
+
+def test_missing_quoted_section_should_be_reported_and_fixed(tmp_path):
+    """Test that a missing quoted section are reported and added as a fix."""
+    filename = "foo/file.toml"
+    project = ProjectMock(tmp_path).save_file(
+        filename,
+        """
+        [existing_section]
+        key = "value"
+        """,
+    )
+    project.style(
+        """
+        ["foo/file.toml"."quoted section"]
+        key = "value"
+
+        ["foo/file.toml"."quoted section".nested]
+        key = "value"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            filename,
+            318,
+            " has missing values:",
+            '["quoted section"]\nkey = "value"\n\n["quoted section".nested]\nkey = "value"',
+        ),
+    ).assert_file_contents(
+        filename,
+        """
+        [existing_section]
+        key = "value"
+
+        ["quoted section"]
+        key = "value"
+
+        ["quoted section".nested]
+        key = "value"
+        """,
+    )
+
+
+def test_modify_quoted_section_value_should_be_reported_and_fixed(tmp_path):
+    """Test that modifying a value in a quoted section name works correctly."""
+    filename = "foo/file.toml"
+    project = ProjectMock(tmp_path).save_file(
+        filename,
+        """
+        [existing_section]
+        key = "value"
+
+        ["quoted section"]
+        key = "value"
+
+        ["quoted section".nested]
+        key = "value"
+        """,
+    )
+    project.style(
+        """
+        ["foo/file.toml"."quoted section"]
+        key = "value_to_modify"
+
+        ["foo/file.toml"."quoted section".nested]
+        key = "value_to_modify"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            filename,
+            319,
+            " has different values. Use this:",
+            '["quoted section"]\n'
+            'key = "value_to_modify"\n\n'
+            '["quoted section".nested]\n'
+            'key = "value_to_modify"',
+        )
+    ).assert_file_contents(
+        filename,
+        """
+        [existing_section]
+        key = "value"
+
+        ["quoted section"]
+        key = "value_to_modify"
+
+        ["quoted section".nested]
+        key = "value_to_modify"
+        """,
+    )

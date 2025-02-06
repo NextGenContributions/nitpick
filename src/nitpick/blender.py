@@ -10,7 +10,6 @@ from __future__ import annotations
 import abc
 import json
 import re
-import shlex
 from collections.abc import Iterable
 from functools import partial
 from pathlib import Path
@@ -230,10 +229,7 @@ def quote_reducer(separator: str) -> Callable:
 
 def quotes_splitter(flat_key: str) -> tuple[str, ...]:
     """Split keys keeping quoted strings together."""
-    return tuple(
-        piece.replace(SEPARATOR_SPACE, SEPARATOR_DOT) if SEPARATOR_SPACE in piece else piece
-        for piece in shlex.split(flat_key.replace(SEPARATOR_DOT, SEPARATOR_SPACE))
-    )
+    return tuple(quoted_split(flat_key))
 
 
 def custom_reducer(separator: str) -> Callable:
