@@ -207,7 +207,12 @@ class IniPlugin(NitpickPlugin):
                         # The expected value is a dictionary, so it's a multiline value
                         # make sure the actual value is also a dictionary
                         lines = values[0].strip().split("\n")
-                        actual = {key: value for line in lines for key, value in [line.split(":")]}
+                        actual = {
+                            key: value
+                            for line in lines
+                            if not line.startswith((";", "#"))  # ignore INI comments
+                            for key, value in [line.split(":")]
+                        }
                         expected = values[1]
                         yield from self.enforce_comma_separated_values_multiline(section, key, actual, expected)
                     else:
