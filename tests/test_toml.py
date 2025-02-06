@@ -47,9 +47,7 @@ def test_suggest_initial_contents(tmp_path):
             " was not found. Create it with this content:",
             expected_toml,
         )
-    ).assert_file_contents(
-        filename, expected_toml
-    )
+    ).assert_file_contents(filename, expected_toml)
 
 
 def test_missing_different_values_pyproject_toml(tmp_path):
@@ -217,7 +215,7 @@ def test_missing_quoted_section_should_be_reported_and_fixed(tmp_path):
             318,
             " has missing values:",
             '["quoted section"]\nkey = "value"\n\n["quoted section".nested]\nkey = "value"',
-        ),
+        )
     ).assert_file_contents(
         filename,
         """
