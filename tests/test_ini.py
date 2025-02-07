@@ -514,3 +514,178 @@ def test_falsy_values_should_be_reported_and_fixed(tmp_path, datadir):
         ]
     ).assert_file_contents(filename, datadir / "falsy_values/expected.ini")
     project.api_check().assert_violations()
+
+
+def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_some_lines_have_missing_values(
+    tmp_path,
+):
+    """Target config value is missing some comma-separated-values in some of its lines."""
+    ProjectMock(tmp_path).save_file(
+        ".flake8",
+        """
+        [flake8]
+        per-file-ignores =
+          tests/*.py:WPS116
+          tests_2/*.py:WPS116,WPS118,WPS218
+          tests_3/*.py:WPS218
+        """,
+    ).style(
+        f"""
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        ".flake8" = ["flake8.per-file-ignores"]
+
+        [".flake8".flake8.per-file-ignores]
+        "tests/*.py" = "WPS116,WPS118"
+        "tests_2/*.py" = "WPS116,WPS118,WPS218"
+        "tests_3/*.py" = "WPS116,WPS118,WPS218"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            ".flake8",
+            Violations.MISSING_VALUES_IN_LIST.code,
+            " has missing values in the 'per-file-ignores.\"tests/*.py\"' key. Include those values:",
+            '[flake8]\nper-file-ignores = (...)\n"tests/*.py":(...),WPS118',
+        ),
+        Fuss(
+            True,
+            ".flake8",
+            Violations.MISSING_VALUES_IN_LIST.code,
+            " has missing values in the 'per-file-ignores.\"tests_3/*.py\"' key. Include those values:",
+            '[flake8]\nper-file-ignores = (...)\n"tests_3/*.py":(...),WPS116,WPS118',
+        ),
+    ).assert_file_contents(
+        ".flake8",
+        """
+        [flake8]
+        per-file-ignores =
+          tests/*.py:WPS116,WPS118
+          tests_2/*.py:WPS116,WPS118,WPS218
+          tests_3/*.py:WPS218,WPS116,WPS118
+        """,
+    )
+
+
+def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_some_lines_are_missing(tmp_path):
+    """Target config value exists, but is missing some lines in its multi-line value."""
+    ProjectMock(tmp_path).save_file(
+        ".flake8",
+        """
+        [flake8]
+        per-file-ignores =
+          tests/*.py:WPS116
+        """,
+    ).style(
+        f"""
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        ".flake8" = ["flake8.per-file-ignores"]
+
+        [".flake8".flake8.per-file-ignores]
+        "tests/*.py" = "WPS116"
+        "tests_2/*.py" = "WPS116,WPS118,WPS218"
+        "tests_3/*.py" = "WPS116,WPS118"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            ".flake8",
+            Violations.MISSING_OPTION.code,
+            ": section [flake8] has some missing key/value pairs. Use this:",
+            '[flake8]\nper-file-ignores = (...)\n"tests_2/*.py":WPS116,WPS118,WPS218',
+        ),
+        Fuss(
+            True,
+            ".flake8",
+            Violations.MISSING_OPTION.code,
+            ": section [flake8] has some missing key/value pairs. Use this:",
+            '[flake8]\nper-file-ignores = (...)\n"tests_3/*.py":WPS116,WPS118',
+        ),
+    ).assert_file_contents(
+        ".flake8",
+        """
+        [flake8]
+        per-file-ignores =
+          tests/*.py:WPS116
+          tests_2/*.py:WPS116,WPS118,WPS218
+          tests_3/*.py:WPS116,WPS118
+        """,
+    )
+
+
+def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_missing_entirely(tmp_path):
+    """Target multi-line config value is missing entirely."""
+    ProjectMock(tmp_path).save_file(
+        ".flake8",
+        """
+        [flake8]
+        woof = meow
+        """,
+    ).style(
+        f"""
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        ".flake8" = ["flake8.per-file-ignores"]
+
+        [".flake8".flake8.per-file-ignores]
+        "tests/*.py" = "WPS116,WPS118"
+        "tests_2/*.py" = "WPS116,WPS118,WPS218"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            ".flake8",
+            Violations.MISSING_OPTION.code,
+            ": section [flake8] has some missing key/value pairs. Use this:",
+            "[flake8]\n"
+            "per-file-ignores = \n"
+            "\t  tests/*.py:WPS116,WPS118\n"
+            "\t  tests_2/*.py:WPS116,WPS118,WPS218",
+        )
+    ).assert_file_contents(
+        ".flake8",
+        """
+        [flake8]
+        woof = meow
+        per-file-ignores =
+          tests/*.py:WPS116,WPS118
+          tests_2/*.py:WPS116,WPS118,WPS218
+        """,
+    )
+
+
+def test_comma_separated_values_in_multiline_config_value_should_be_without_violation_if_no_changes(tmp_path):
+    """Target multi-line config value has not deviated from the style.
+
+    The comment preceding the 'per-file-ignores' config should be retained.
+    While the comments preceding each option in the 'per-file-ignores' key should be removed.
+    The support to retain such comments after fix is not implemented yet.
+    """
+    ProjectMock(tmp_path).save_file(
+        ".flake8",
+        """
+        [flake8]
+        ; this comment would be retained after fix
+        per-file-ignores =
+            # this comment would be removed after fix
+          tests/*.py:WPS116,WPS118
+          ; another comment that would be removed after fix
+          tests_2/*.py:WPS116,WPS118,WPS218
+        """,
+    ).style(
+        f"""
+        [nitpick.files.{COMMA_SEPARATED_VALUES}]
+        ".flake8" = ["flake8.per-file-ignores"]
+
+        [".flake8".flake8.per-file-ignores]
+        "tests/*.py" = "WPS116,WPS118"
+        "tests_2/*.py" = "WPS116,WPS118,WPS218"
+        """
+    ).api_check_then_fix().assert_file_contents(
+        ".flake8",
+        """
+        [flake8]
+        ; this comment would be retained after fix
+        per-file-ignores =
+          tests/*.py:WPS116,WPS118
+          tests_2/*.py:WPS116,WPS118,WPS218
+        """,
+    )
