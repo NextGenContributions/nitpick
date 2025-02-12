@@ -42,11 +42,7 @@ from nitpick.exceptions import QuitComplainingError
 from nitpick.generic import filter_names, glob_files, glob_non_ignored_files, relative_to_current_dir
 from nitpick.plugins.info import FileInfo
 from nitpick.schemas import BaseNitpickSchema, flatten_marshmallow_errors, help_message
-from nitpick.style import (
-    BuiltinStyle,
-    StyleManager,
-    builtin_styles,
-)
+from nitpick.style import BuiltinStyle, StyleManager, builtin_styles
 from nitpick.violations import Fuss, ProjectViolations, Reporter, StyleViolations
 
 if TYPE_CHECKING:

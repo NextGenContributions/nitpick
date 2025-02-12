@@ -804,10 +804,7 @@ class BuiltinStyle:  # pylint: disable=too-few-public-methods
         if library_dir:
             # Style in a directory
             from_resources_root = without_suffix.relative_to(library_dir)
-            bis = BuiltinStyle(
-                formatted=str(without_suffix),
-                path_from_resources_root=from_resources_root.as_posix(),
-            )
+            bis = BuiltinStyle(formatted=str(without_suffix), path_from_resources_root=from_resources_root.as_posix())
         else:
             # Style from the built-in library
             package_path = resource_path.relative_to(builtin_resources_root().parent.parent)
