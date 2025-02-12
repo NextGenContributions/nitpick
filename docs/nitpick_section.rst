@@ -47,6 +47,16 @@ To enforce that certain files should not exist in the project, you can add them 
 Multiple files can be configured as above.
 The message is optional.
 
+Files that are unknown
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Files that don't have a valid extension nor recognized by ``identity`` lib can end up causing unknown file error in ``nitpick``. In such cases, you can explicitly declare the plugins (tags) to use for such files.
+
+.. code-block:: toml
+
+    [nitpick.files.tags]
+    ".shellcheckrc" = ["ini"]
+
 Comma separated values
 ^^^^^^^^^^^^^^^^^^^^^^
 
