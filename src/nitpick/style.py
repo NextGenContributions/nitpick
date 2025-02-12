@@ -346,7 +346,8 @@ class ConfigValidator:
         validation_errors = {}
         toml_dict = {}
         for key, value_dict in config_dict.items():
-            info = FileInfo.create(self.project, key)
+            tags = toml_dict.get("nitpick", {}).get("files", {}).get("tags", {}).get(key, [])
+            info = FileInfo.create(self.project, key, tags)
             toml_dict[info.path_from_root] = value_dict
             validation_errors.update(self._validate_item(key, info, value_dict))
         return toml_dict, validation_errors

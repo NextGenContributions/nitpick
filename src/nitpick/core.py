@@ -147,7 +147,8 @@ class Nitpick:
             logger.debug(f"{config_key}: Finding plugins to enforce style")
 
             # 2.
-            info = FileInfo.create(self.project, config_key)
+            tags = self.project.nitpick_files_section.get("tags", {}).get(config_key, [])
+            info = FileInfo.create(self.project, config_key, tags)
             # pylint: disable=no-member
             for plugin_class in self.project.plugin_manager.hook.can_handle(info=info):
                 yield from plugin_class(info, config_dict, autofix).entry_point()

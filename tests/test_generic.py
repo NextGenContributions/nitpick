@@ -11,6 +11,8 @@ from unittest import mock
 
 import pytest
 from furl import furl
+from src.nitpick.plugins.ini import Violations
+from src.nitpick.violations import Fuss
 from testfixtures import compare
 
 from nitpick.constants import EDITOR_CONFIG, GIT_DIR, GIT_IGNORE, PYTHON_TOX_INI
@@ -22,6 +24,7 @@ from nitpick.generic import (
     relative_to_current_dir,
 )
 from nitpick.plugins import FileInfo
+from tests.helpers import ProjectMock
 
 
 @mock.patch.object(Path, "cwd")
@@ -177,7 +180,7 @@ def test_error_when_calling_git_config(mock_check_output, capsys, exception: Exc
         ("foo/pylintrc", {"pylintrc", "text", "ini"}),
     ],
 )
-def test_different_types_of_pylintrc_config_should_work(filepath: str, expected_tags: set[str]):
+def test_different_types_of_pylintrc_config_should_work(filepath: str, expected_tags: set[str], tmp_path: Path):
     """Different pylintrc configs should have different expected tags.
 
     'pylintrc' is a special case where the config can either be a TOML or INI file.
@@ -187,4 +190,65 @@ def test_different_types_of_pylintrc_config_should_work(filepath: str, expected_
     More on how pylint search for and use configuration files:
     https://pylint.pycqa.org/en/latest/user_guide/usage/run.html#command-line-options
     """
-    assert FileInfo.tags_from_filename(filepath) == expected_tags
+    project = ProjectMock(tmp_path)
+    info = FileInfo.create(project, filepath)
+    assert info.tags == expected_tags
+
+
+def test_unknown_file_should_raise_unknown_file_error(tmp_path):
+    """Test a file with unknown extension and name, which should cause unknown file error."""
+    filepath = "conf/.shellcheckrc"
+    ProjectMock(tmp_path).save_file(
+        filepath,
+        """
+        ; empty ini file, nothing but a comment
+        """,
+    ).style(
+        f"""
+        ["{filepath}".conf]
+        enable = "all"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            fixed=False,
+            filename="nitpick-style.toml",
+            code=1,
+            message=" has an incorrect style. Invalid config:",
+            suggestion="conf/.shellcheckrc: Unknown file. See https://nitpick.rtfd.io/en/latest/plugins.html.",
+        )
+    )
+
+
+def test_explicit_files_tags_can_be_used_to_handle_unknown_file(tmp_path):
+    """Test explicit files tags can be used to handle unknown file whose extension and name are not recognized."""
+    filepath = "conf/.shellcheckrc"
+    ProjectMock(tmp_path).save_file(
+        filepath,
+        """
+        ; empty ini file, nothing but a comment
+        """,
+    ).style(
+        f"""
+        [nitpick.files.tags]
+        "{filepath}" = ["ini"]
+
+        ["{filepath}".conf]
+        enable = "all"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            fixed=True,
+            filename=filepath,
+            code=Violations.MISSING_SECTIONS.code,
+            message=" has some missing sections. Use this:",
+            suggestion="[conf]\nenable = all",
+        )
+    ).assert_file_contents(
+        filepath,
+        """
+        ; empty ini file, nothing but a comment
+
+        [conf]
+        enable = all
+        """,
+    )
