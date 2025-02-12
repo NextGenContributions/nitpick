@@ -346,7 +346,8 @@ class ConfigValidator:
         validation_errors = {}
         toml_dict = {}
         for key, value_dict in config_dict.items():
-            info = FileInfo.create(self.project, key)
+            tags = toml_dict.get("nitpick", {}).get("files", {}).get("tags", {}).get(key, [])
+            info = FileInfo.create(self.project, key, tags)
             toml_dict[info.path_from_root] = value_dict
             validation_errors.update(self._validate_item(key, info, value_dict))
         return toml_dict, validation_errors
@@ -803,10 +804,7 @@ class BuiltinStyle:  # pylint: disable=too-few-public-methods
         if library_dir:
             # Style in a directory
             from_resources_root = without_suffix.relative_to(library_dir)
-            bis = BuiltinStyle(
-                formatted=str(without_suffix),
-                path_from_resources_root=from_resources_root.as_posix(),
-            )
+            bis = BuiltinStyle(formatted=str(without_suffix), path_from_resources_root=from_resources_root.as_posix())
         else:
             # Style from the built-in library
             package_path = resource_path.relative_to(builtin_resources_root().parent.parent)

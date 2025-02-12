@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from identify import identify
 from loguru import logger
@@ -27,21 +27,27 @@ class FileInfo:
     tags: set[str] = field(default_factory=set)
 
     @classmethod
-    def create(cls, project: Project, path_from_root: str) -> FileInfo:
+    def create(cls, project: Project, path_from_root: str, tags: Iterable[str] | None = None) -> FileInfo:
         """Clean the file name and get its tags."""
         if Deprecation.pre_commit_without_dash(path_from_root):
             clean_path = DOT + path_from_root
         else:
             clean_path = DOT + path_from_root[1:] if path_from_root.startswith("-") else path_from_root
-        tags = FileInfo.tags_from_filename(clean_path)
+
+        if not tags:
+            # Auto-detect a list of tags associated with the file
+            tags = identify.tags_from_filename(clean_path)
+
+        tags = FileInfo.remove_conflicting_tags(clean_path, tags)
         return cls(project, clean_path, tags)
 
     @staticmethod
-    def tags_from_filename(path: str) -> set[str]:
-        """Get a list of tags associated with the file."""
-        tags = identify.tags_from_filename(path)
+    def remove_conflicting_tags(path: str, input_tags: Iterable[str] | None) -> set[str]:
+        """Check and remove conflicting tags, there can be only one of them."""
+        if not input_tags:
+            return set()
 
-        # Check for conflicting tags, there can be only one of them
+        tags = set(input_tags)
         found_tags = CONFLICTING_TAGS.intersection(tags)
         if len(found_tags) > 1 and (ext := Path(path).suffix):
             # The file has a valid extension and not just some ".dotfile"

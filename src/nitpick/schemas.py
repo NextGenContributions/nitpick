@@ -55,6 +55,7 @@ class NitpickFilesSectionSchema(BaseNitpickSchema):
 
     absent = fields.Dict(fields.NonEmptyString, fields.String())
     present = fields.Dict(fields.NonEmptyString, fields.String())
+    tags = fields.Dict(fields.NonEmptyString, fields.List(fields.String()))
     comma_separated_values = fields.Dict(
         fields.NonEmptyString, fields.List(fields.String(validate=fields.validate_section_dot_field))
     )

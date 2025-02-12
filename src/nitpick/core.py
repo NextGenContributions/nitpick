@@ -42,11 +42,7 @@ from nitpick.exceptions import QuitComplainingError
 from nitpick.generic import filter_names, glob_files, glob_non_ignored_files, relative_to_current_dir
 from nitpick.plugins.info import FileInfo
 from nitpick.schemas import BaseNitpickSchema, flatten_marshmallow_errors, help_message
-from nitpick.style import (
-    BuiltinStyle,
-    StyleManager,
-    builtin_styles,
-)
+from nitpick.style import BuiltinStyle, StyleManager, builtin_styles
 from nitpick.violations import Fuss, ProjectViolations, Reporter, StyleViolations
 
 if TYPE_CHECKING:
@@ -147,7 +143,8 @@ class Nitpick:
             logger.debug(f"{config_key}: Finding plugins to enforce style")
 
             # 2.
-            info = FileInfo.create(self.project, config_key)
+            tags = self.project.nitpick_files_section.get("tags", {}).get(config_key, [])
+            info = FileInfo.create(self.project, config_key, tags)
             # pylint: disable=no-member
             for plugin_class in self.project.plugin_manager.hook.can_handle(info=info):
                 yield from plugin_class(info, config_dict, autofix).entry_point()
