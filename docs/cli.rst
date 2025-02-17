@@ -93,8 +93,9 @@ At the end of execution, this command displays:
       You can use partial and multiple file names in the FILES argument.
 
     Options:
-      -v, --verbose  Increase logging verbosity (-v = INFO, -vv = DEBUG)
-      --help         Show this message and exit.
+      -p, --project DIRECTORY  Path to project root
+      -v, --verbose            Increase logging verbosity (-v = INFO, -vv = DEBUG)
+      --help                   Show this message and exit.
 
 .. _cli_cmd_check:
 
@@ -113,8 +114,9 @@ At the end of execution, this command displays:
       argument.
 
     Options:
-      -v, --verbose  Increase logging verbosity (-v = INFO, -vv = DEBUG)
-      --help         Show this message and exit.
+      -p, --project DIRECTORY  Path to project root
+      -v, --verbose            Increase logging verbosity (-v = INFO, -vv = DEBUG)
+      --help                   Show this message and exit.
 
 .. _cli_cmd_ls:
 
@@ -132,7 +134,8 @@ At the end of execution, this command displays:
       and multiple file names in the FILES argument.
 
     Options:
-      --help  Show this message and exit.
+      -p, --project DIRECTORY  Path to project root
+      --help                   Show this message and exit.
 
 .. _cli_cmd_init:
 
@@ -147,6 +150,7 @@ At the end of execution, this command displays:
       Create or update the [tool.nitpick] table in the configuration file.
 
     Options:
+      -p, --project DIRECTORY  Path to project root
       -f, --fix                Autofix the files changed by the command;
                                otherwise, just print what would be done
       -s, --suggest            Suggest styles based on the extension of project
