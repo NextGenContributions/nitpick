@@ -309,15 +309,7 @@ def _build_library(gitref: bool = True) -> list[str]:
     lines = []
     for tag, rows in library.items():
         lines.extend(["", tag, "~" * len(tag), ""])
-        lines.extend(
-            rst_table(
-                (
-                    "Style URL",
-                    "Description",
-                ),
-                rows,
-            )
-        )
+        lines.extend(rst_table(("Style URL", "Description"), rows))
     return lines
 
 

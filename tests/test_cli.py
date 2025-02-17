@@ -75,12 +75,7 @@ def style_dir_with_types(shared_datadir: Path) -> Generator[Path, None, None]:
     ],
 )
 def test_create_update_tool_nitpick_table_on_config_files(
-    style_dir_with_types: Path,
-    tmp_path: Path,
-    pyproject_toml: str | None,
-    fix: bool,
-    before: str,
-    after: str,
+    style_dir_with_types: Path, tmp_path: Path, pyproject_toml: str | None, fix: bool, before: str, after: str
 ) -> None:
     """If no config file is found, create a basic .nitpick.toml."""
     assert style_dir_with_types
@@ -157,18 +152,8 @@ def test_create_the_ignored_styles_array_only_when_suggesting_styles(tmp_path: P
         assert not (tmp_path / DOT_NITPICK_TOML).exists()
 
 
-@pytest.mark.parametrize(
-    ("fix", "key"),
-    [
-        (True, CONFIG_KEY_STYLE),
-        (False, CONFIG_KEY_IGNORE_STYLES),
-    ],
-)
-def test_dont_add_again_an_existing_nor_ignored_style(
-    tmp_path: Path,
-    fix: bool,
-    key: str,
-) -> None:
+@pytest.mark.parametrize(("fix", "key"), [(True, CONFIG_KEY_STYLE), (False, CONFIG_KEY_IGNORE_STYLES)])
+def test_dont_add_again_an_existing_nor_ignored_style(tmp_path: Path, fix: bool, key: str) -> None:
     """Don't add again an existing nor ignored style."""
     unchanged = f"""
         [{CONFIG_TOOL_NITPICK_KEY}]
@@ -180,16 +165,10 @@ def test_dont_add_again_an_existing_nor_ignored_style(
         fix=fix,
         style_urls=["my-style.toml"],
         exit_code=0,
-    ).assert_file_contents(
-        PYTHON_PYPROJECT_TOML,
-        unchanged,
-    )
+    ).assert_file_contents(PYTHON_PYPROJECT_TOML, unchanged)
 
 
-def test_added_style_should_be_the_first(
-    style_dir_with_types: Path,
-    tmp_path: Path,
-) -> None:
+def test_added_style_should_be_the_first(style_dir_with_types: Path, tmp_path: Path) -> None:
     """The style added from the CLI should be the first, before the suggested styles."""
     assert style_dir_with_types
     project = ProjectMock(tmp_path)

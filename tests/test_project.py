@@ -110,9 +110,7 @@ def test_django_project_structure(tmp_path):
         [flake8]
         some = thing
         """
-    ).touch_file(
-        "my_django_project/manage.py"
-    ).style(
+    ).touch_file("my_django_project/manage.py").style(
         f"""
         ["{PYTHON_PYPROJECT_TOML}".tool.black]
         lines = 100
@@ -176,9 +174,7 @@ def test_has_multiple_config_files(tmp_path, caplog):
         style = ["local_pyproj.toml"]
         cache = "forever"
         """,
-    ).api_check(
-        offline=True
-    )
+    ).api_check(offline=True)
     assert project.nitpick_instance.project.read_configuration() == Configuration(
         project.root_dir / DOT_NITPICK_TOML,
         {"tool": {"nitpick": {"style": ["local_nit.toml"], "cache": "never"}}},

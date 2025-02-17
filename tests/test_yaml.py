@@ -115,7 +115,7 @@ def test_objects_are_compared_by_hash_on_list_of_dicts_and_new_ones_are_added(tm
                     - age: 35
                       name: Silly
             """,
-        ),
+        )
     ).assert_file_contents(filename, datadir / "list-by-hash-expected.yaml")
     project.api_check().assert_violations()
 
@@ -153,7 +153,7 @@ def test_maximum_two_level_nesting_on_lists_using_jmes_expression_as_list_key_fa
                             age: 27
                             from: Liverpool
             """,
-        ),
+        )
     ).assert_file_contents(filename, datadir / "jmes-list-key-expected.yaml")
     project.api_check().assert_violations()
 
