@@ -42,15 +42,17 @@ VERBOSE_OPTION = click.option(
     "--verbose", "-v", count=True, default=False, help="Increase logging verbosity (-v = INFO, -vv = DEBUG)"
 )
 FILES_ARGUMENT = click.argument("files", nargs=-1)
-
-
-@click.group()
-@click.option(
+# TODO(phuongfi91): Project option is made available globally in an ugly way. Refactor it.
+PROJECT_OPTION = click.option(
     "--project",
     "-p",
     type=click.Path(exists=True, dir_okay=True, file_okay=False, resolve_path=True),
     help="Path to project root",
 )
+
+
+@click.group()
+@PROJECT_OPTION
 @click.option(
     f"--{Flake8OptionEnum.OFFLINE.name.lower()}",  # pylint: disable=no-member
     is_flag=True,
@@ -62,18 +64,19 @@ def nitpick_cli(project: Path | None = None, offline=False):  # pylint: disable=
     """Enforce the same settings across multiple language-independent projects."""
 
 
-def get_nitpick(context: click.Context) -> Nitpick:
+def get_nitpick(context: click.Context, project: Path | None = None) -> Nitpick:
     """Create a Nitpick instance from the click context parameters."""
-    project = None
     offline = False
     if context.parent:
-        project = context.parent.params["project"]
+        project = (
+            project or context.parent.params["project"]
+        )  # prioritize 'project' from the current command over the one from context
         offline = context.parent.params["offline"]
     project_root: Path | None = Path(project) if project else None
     return Nitpick.singleton().init(project_root, offline)
 
 
-def common_fix_or_check(context, verbose: int, files, check_only: bool) -> None:
+def common_fix_or_check(context, project: Path | None, verbose: int, files, check_only: bool) -> None:
     """Common CLI code for both "fix" and "check" commands."""
     if verbose:
         level = logging.INFO if verbose == 1 else logging.DEBUG
@@ -85,7 +88,7 @@ def common_fix_or_check(context, verbose: int, files, check_only: bool) -> None:
 
         logger.enable(PROJECT_NAME)
 
-    nit = get_nitpick(context)
+    nit = get_nitpick(context, project)
     try:
         for fuss in nit.run(*files, autofix=not check_only):
             nit.echo(fuss.pretty)
@@ -101,39 +104,42 @@ def common_fix_or_check(context, verbose: int, files, check_only: bool) -> None:
 
 @nitpick_cli.command()
 @click.pass_context
+@PROJECT_OPTION
 @VERBOSE_OPTION
 @FILES_ARGUMENT
-def fix(context, verbose, files):
+def fix(context, project: Path | None, verbose, files):
     """Fix files, modifying them directly.
 
     You can use partial and multiple file names in the FILES argument.
     """
-    common_fix_or_check(context, verbose, files, False)
+    common_fix_or_check(context, project, verbose, files, False)
 
 
 @nitpick_cli.command()
 @click.pass_context
+@PROJECT_OPTION
 @VERBOSE_OPTION
 @FILES_ARGUMENT
-def check(context, verbose, files):
+def check(context, project: Path | None, verbose, files):
     """Don't modify files, just print the differences.
 
     Return code 0 means nothing would change. Return code 1 means some files would be modified.
     You can use partial and multiple file names in the FILES argument.
     """
-    common_fix_or_check(context, verbose, files, True)
+    common_fix_or_check(context, project, verbose, files, True)
 
 
 @nitpick_cli.command()
 @click.pass_context
+@PROJECT_OPTION
 @FILES_ARGUMENT
-def ls(context, files):  # pylint: disable=invalid-name
+def ls(context, project: Path | None, files):  # pylint: disable=invalid-name
     """List of files configured in the Nitpick style.
 
     Display existing files in green and absent files in red.
     You can use partial and multiple file names in the FILES argument.
     """
-    nit = get_nitpick(context)
+    nit = get_nitpick(context, project)
     try:
         violations = list(nit.project.merge_styles(nit.offline))
         error_exit_code = 1
@@ -152,6 +158,7 @@ def ls(context, files):  # pylint: disable=invalid-name
 
 @nitpick_cli.command()
 @click.pass_context
+@PROJECT_OPTION
 @click.option(
     "--fix",
     "-f",
@@ -173,8 +180,9 @@ def ls(context, files):  # pylint: disable=invalid-name
     help="Library dir to scan for style files (implies --suggest); if not provided, uses the built-in style library",
 )
 @click.argument("style_urls", nargs=-1)
-def init(
+def init(  # noqa: PLR0913, pylint: disable=too-many-arguments
     context,
+    project: Path | None,
     fix: bool,  # pylint: disable=redefined-outer-name
     suggest: bool,
     library: str | None,
@@ -194,7 +202,7 @@ def init(
         )
         return
 
-    nit = get_nitpick(context)
+    nit = get_nitpick(context, project)
     config = nit.project.read_configuration()
 
     # Convert tuple to list, so we can add styles to it
