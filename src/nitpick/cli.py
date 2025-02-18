@@ -180,7 +180,7 @@ def ls(context, project: Path | None, files):  # pylint: disable=invalid-name
     help="Library dir to scan for style files (implies --suggest); if not provided, uses the built-in style library",
 )
 @click.argument("style_urls", nargs=-1)
-def init(  # noqa: PLR0913
+def init(  # noqa: PLR0913, pylint: disable=too-many-arguments
     context,
     project: Path | None,
     fix: bool,  # pylint: disable=redefined-outer-name
