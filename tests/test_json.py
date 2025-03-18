@@ -17,16 +17,8 @@ def test_suggest_initial_contents(tmp_path, datadir):
         style = ["package-json"]
         """
     ).api_check_then_fix(
-        Fuss(
-            True,
-            JAVASCRIPT_PACKAGE_JSON,
-            341,
-            " was not found. Create it with this content:",
-            expected_package_json,
-        )
-    ).assert_file_contents(
-        JAVASCRIPT_PACKAGE_JSON, expected_package_json
-    ).api_check_then_fix()
+        Fuss(True, JAVASCRIPT_PACKAGE_JSON, 341, " was not found. Create it with this content:", expected_package_json)
+    ).assert_file_contents(JAVASCRIPT_PACKAGE_JSON, expected_package_json).api_check_then_fix()
 
 
 def test_missing_different_values_with_contains_json_with_contains_keys(tmp_path, datadir):
@@ -70,9 +62,7 @@ def test_missing_different_values_with_contains_json_with_contains_keys(tmp_path
             }
             """,
         ),
-    ).assert_file_contents(
-        JAVASCRIPT_PACKAGE_JSON, expected_package_json
-    ).api_check_then_fix()
+    ).assert_file_contents(JAVASCRIPT_PACKAGE_JSON, expected_package_json).api_check_then_fix()
 
 
 def test_missing_different_values_with_contains_json_without_contains_keys(tmp_path, datadir):
@@ -124,9 +114,7 @@ def test_missing_different_values_with_contains_json_without_contains_keys(tmp_p
             }
             """,
         ),
-    ).assert_file_contents(
-        "my.json", datadir / "3-expected.json"
-    ).api_check_then_fix()
+    ).assert_file_contents("my.json", datadir / "3-expected.json").api_check_then_fix()
 
 
 def test_missing_value_with_doubly_single_quoted_dotted_key_should_be_added_and_kept_flatten(tmp_path):
@@ -138,10 +126,7 @@ def test_missing_value_with_doubly_single_quoted_dotted_key_should_be_added_and_
             "some_value"
         \"\"\"
         """
-    ).save_file(
-        "my.json",
-        """{ "project_name": "my-project" }""",
-    ).api_fix().assert_file_contents(
+    ).save_file("my.json", """{ "project_name": "my-project" }""").api_fix().assert_file_contents(
         "my.json",
         """
         {
@@ -161,10 +146,7 @@ def test_missing_value_with_dotted_key_should_be_added_and_unflatten(tmp_path):
             "some_value"
         \"\"\"
         """
-    ).save_file(
-        "my.json",
-        """{ "project_name": "my-project" }""",
-    ).api_fix().assert_file_contents(
+    ).save_file("my.json", """{ "project_name": "my-project" }""").api_fix().assert_file_contents(
         "my.json",
         """
         {
