@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "something": "else",
   "commitlint": {
-    "extends": ["wrong-plugin-should-be-replaced", "another-wrong-plugin"]
+    "extends": ["some-plugin-should-be-kept", "another-plugin-should-be-kept"]
   }
 }

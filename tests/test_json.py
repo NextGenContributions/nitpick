@@ -17,16 +17,8 @@ def test_suggest_initial_contents(tmp_path, datadir):
         style = ["package-json"]
         """
     ).api_check_then_fix(
-        Fuss(
-            True,
-            JAVASCRIPT_PACKAGE_JSON,
-            341,
-            " was not found. Create it with this content:",
-            expected_package_json,
-        )
-    ).assert_file_contents(
-        JAVASCRIPT_PACKAGE_JSON, expected_package_json
-    ).api_check_then_fix()
+        Fuss(True, JAVASCRIPT_PACKAGE_JSON, 341, " was not found. Create it with this content:", expected_package_json)
+    ).assert_file_contents(JAVASCRIPT_PACKAGE_JSON, expected_package_json).api_check_then_fix()
 
 
 def test_missing_different_values_with_contains_json_with_contains_keys(tmp_path, datadir):
@@ -70,9 +62,7 @@ def test_missing_different_values_with_contains_json_with_contains_keys(tmp_path
             }
             """,
         ),
-    ).assert_file_contents(
-        JAVASCRIPT_PACKAGE_JSON, expected_package_json
-    ).api_check_then_fix()
+    ).assert_file_contents(JAVASCRIPT_PACKAGE_JSON, expected_package_json).api_check_then_fix()
 
 
 def test_missing_different_values_with_contains_json_without_contains_keys(tmp_path, datadir):
@@ -124,9 +114,184 @@ def test_missing_different_values_with_contains_json_without_contains_keys(tmp_p
             }
             """,
         ),
-    ).assert_file_contents(
-        "my.json", datadir / "3-expected.json"
-    ).api_check_then_fix()
+    ).assert_file_contents("my.json", datadir / "3-expected.json").api_check_then_fix()
+
+
+def test_missing_value_with_doubly_single_quoted_dotted_key_should_be_added_and_kept_flatten(tmp_path):
+    """A dotted key wrapped in double single quotes should be added and preserved without getting unflatten."""
+    ProjectMock(tmp_path).style(
+        """
+        ["my.json".contains_json]
+        "''some.dotted.key''" = \"\"\"
+            "some_value"
+        \"\"\"
+        """
+    ).save_file("my.json", """{ "project_name": "my-project" }""").api_fix().assert_file_contents(
+        "my.json",
+        """
+        {
+          "project_name": "my-project",
+          "some.dotted.key": "some_value"
+        }
+        """,
+    )
+
+
+def test_missing_value_with_dotted_key_should_be_added_and_unflatten(tmp_path):
+    """A dotted key should be added and unflatten."""
+    ProjectMock(tmp_path).style(
+        """
+        ["my.json".contains_json]
+        "some.dotted.key" = \"\"\"
+            "some_value"
+        \"\"\"
+        """
+    ).save_file("my.json", """{ "project_name": "my-project" }""").api_fix().assert_file_contents(
+        "my.json",
+        """
+        {
+          "project_name": "my-project",
+          "some": {
+            "dotted": {
+              "key": "some_value"
+            }
+          }
+        }
+        """,
+    )
+
+
+def test_missing_values_in_array_should_be_appended(tmp_path):
+    """Test missing values in array should be appended."""
+    ProjectMock(tmp_path).style(
+        """
+        ["my.json".contains_json]
+        "some_key" = \"\"\"
+            [
+                "val_1",
+                "val_2",
+                "val_3"
+            ]
+        \"\"\"
+        """
+    ).save_file(
+        "my.json",
+        """
+        {
+            "project_name": "my-project",
+            "some_key": [
+                "val_1"
+            ]
+        }
+        """,
+    ).api_fix().assert_file_contents(
+        "my.json",
+        """
+        {
+          "project_name": "my-project",
+          "some_key": [
+            "val_1",
+            "val_2",
+            "val_3"
+          ]
+        }
+        """,
+    )
+
+
+def test_different_values_in_dict_should_be_updated(tmp_path):
+    """Test different values in dict should be appended."""
+    ProjectMock(tmp_path).style(
+        """
+        ["my.json".contains_json]
+        "some_key" = \"\"\"
+            {
+                "key_1": "val_1_updated",
+                "key_2": "val_2",
+                "key_3": {
+                    "k": "v"
+                }
+            }
+        \"\"\"
+        """
+    ).save_file(
+        "my.json",
+        """
+        {
+            "project_name": "my-project",
+            "some_key": {
+                "key_1": "val_1"
+            }
+        }
+        """,
+    ).api_fix().assert_file_contents(
+        "my.json",
+        """
+        {
+          "project_name": "my-project",
+          "some_key": {
+            "key_1": "val_1_updated",
+            "key_2": "val_2",
+            "key_3": {
+              "k": "v"
+            }
+          }
+        }
+        """,
+    )
+
+
+def test_missing_values_in_nested_dict_and_array_should_also_be_updated_and_appended(tmp_path):
+    """Test missing values in nested dict and array should also be updated and appended."""
+    ProjectMock(tmp_path).style(
+        """
+        ["my.json".contains_json]
+        "some_key" = \"\"\"
+            {
+                "key_dict": {
+                    "k": "v"
+                },
+                "key_array": [
+                    "val_2",
+                    "val_3"
+                ]
+            }
+        \"\"\"
+        """
+    ).save_file(
+        "my.json",
+        """
+        {
+            "project_name": "my-project",
+            "some_key": {
+                "key_dict": {
+                    "existing_k": "existing_v"
+                },
+                "key_array": [
+                    "val_1"
+                ]
+            }
+        }
+        """,
+    ).api_fix().assert_file_contents(
+        "my.json",
+        """
+        {
+          "project_name": "my-project",
+          "some_key": {
+            "key_array": [
+              "val_1",
+              "val_2",
+              "val_3"
+            ],
+            "key_dict": {
+              "existing_k": "existing_v",
+              "k": "v"
+            }
+          }
+        }
+        """,
+    )
 
 
 def test_invalid_json(tmp_path, datadir):

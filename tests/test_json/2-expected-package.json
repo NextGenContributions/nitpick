@@ -1,6 +1,8 @@
 {
   "commitlint": {
     "extends": [
+      "some-plugin-should-be-kept",
+      "another-plugin-should-be-kept",
       "@commitlint/config-conventional"
     ]
   },
