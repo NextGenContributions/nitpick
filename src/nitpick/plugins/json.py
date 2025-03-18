@@ -87,9 +87,32 @@ class JsonPlugin(NitpickPlugin):
         if not change:
             return
         if blender:
-            blender.update(flatten_quotes(change.as_object))
+            if violation == SharedViolations.MISSING_VALUES:
+                self._update_missing_values(blender, change)
+            else:
+                blender.update(flatten_quotes(change.as_object))
             self.dirty = True
         yield self.reporter.make_fuss(violation, change.reformatted, prefix="", fixed=self.autofix)
+
+    def _update_missing_values(self, blender: JsonDict, change: BaseDoc | None):  # pylint: disable=no-self-use
+        """Update the missing values in the blender, depending on the type of each key's value."""
+        flattened_changes = flatten_quotes(change.as_object)
+        for key, change_value in flattened_changes.items():
+            if key in blender:
+                blender_value = blender[key]
+                # Check if both are of the same type
+                if isinstance(blender_value, list) and isinstance(change_value, list):
+                    # For arrays, append values without duplicates
+                    blender[key].extend(change_value)
+                elif isinstance(blender_value, dict) and isinstance(change_value, dict):
+                    # For dictionaries, update recursively
+                    blender_value.update(change_value)
+                else:
+                    # For different types or scalar values, simply replace
+                    blender[key] = change_value
+            else:
+                # Key doesn't exist in blender, simply add it
+                blender[key] = change_value
 
     @property
     def initial_contents(self) -> str:
