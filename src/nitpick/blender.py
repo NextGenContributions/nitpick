@@ -673,7 +673,8 @@ class JsonDoc(BaseDoc):
         if self.path is not None:
             self._string = Path(self.path).read_text(encoding="UTF-8")
         if self._string is not None:
-            self._object = flatten_quotes(json.loads(self._string))
+            s = self._string.strip() or "{}"  # preventive measure for empty file
+            self._object = flatten_quotes(json.loads(s))
         if self._object is not None:
             # Every file should end with a blank line
             self._reformatted = json.dumps(self._object, sort_keys=True, indent=2) + "\n"

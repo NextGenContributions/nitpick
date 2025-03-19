@@ -59,7 +59,7 @@ class JsonPlugin(NitpickPlugin):
                 self.report(SharedViolations.MISSING_VALUES, blender, comparison.missing),
             )
 
-        if self.autofix and self.dirty and blender:
+        if self.autofix and self.dirty and blender is not None:
             self.file_path.write_text(JsonDoc(obj=unflatten_quotes(blender)).reformatted)
 
     def expected_dict_from_contains_keys(self):
@@ -86,7 +86,7 @@ class JsonPlugin(NitpickPlugin):
         """Report a violation while optionally modifying the JSON dict."""
         if not change:
             return
-        if blender:
+        if blender is not None:
             if violation == SharedViolations.MISSING_VALUES:
                 self._update_missing_values(blender, change)
             else:
