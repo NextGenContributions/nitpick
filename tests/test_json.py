@@ -367,10 +367,7 @@ def test_missing_value_should_be_added_to_empty_json_file_with_no_keys(tmp_path)
             "some_value"
         \"\"\"
         """
-    ).save_file(
-        "my.json",
-        """{}""",
-    ).api_fix().assert_file_contents(
+    ).save_file("my.json", """{}""").api_fix().assert_file_contents(
         "my.json",
         """
         {
@@ -389,10 +386,7 @@ def test_missing_value_should_be_added_to_completely_empty_json_file(tmp_path):
             "some_value"
         \"\"\"
         """
-    ).save_file(
-        "my.json",
-        "\n",
-    ).api_fix().assert_file_contents(
+    ).save_file("my.json", "\n").api_fix().assert_file_contents(
         "my.json",
         """
         {
