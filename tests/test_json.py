@@ -356,3 +356,47 @@ def test_jsonfile_deprecated(tmp_path):
         )
         assert len(filtered) == 1
         assert issubclass(filtered[0].category, DeprecationWarning)
+
+
+def test_missing_value_should_be_added_to_empty_json_file_with_no_keys(tmp_path):
+    """Missing value should be added to empty json file with just "{}"."""
+    ProjectMock(tmp_path).style(
+        """
+        ["my.json".contains_json]
+        "some_key" = \"\"\"
+            "some_value"
+        \"\"\"
+        """
+    ).save_file(
+        "my.json",
+        """{}""",
+    ).api_fix().assert_file_contents(
+        "my.json",
+        """
+        {
+          "some_key": "some_value"
+        }
+        """,
+    )
+
+
+def test_missing_value_should_be_added_to_completely_empty_json_file(tmp_path):
+    """Missing value should be added to completely empty json file."""
+    ProjectMock(tmp_path).style(
+        """
+        ["my.json".contains_json]
+        "some_key" = \"\"\"
+            "some_value"
+        \"\"\"
+        """
+    ).save_file(
+        "my.json",
+        "\n",
+    ).api_fix().assert_file_contents(
+        "my.json",
+        """
+        {
+          "some_key": "some_value"
+        }
+        """,
+    )
