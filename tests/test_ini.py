@@ -301,7 +301,9 @@ def test_missing_different_values_editorconfig_with_root(tmp_path, datadir):
             another_missing = 100
             """,
         ),
-    ).assert_file_contents(EDITOR_CONFIG, datadir / "2-expected-editorconfig.ini")
+    ).assert_file_contents(
+        EDITOR_CONFIG, datadir / "2-expected-editorconfig.ini"
+    )
 
 
 def test_invalid_configuration_comma_separated_values(tmp_path):
@@ -399,7 +401,9 @@ def test_multiline_comment(tmp_path, datadir):
             new = value
             """,
         )
-    ).assert_file_contents(PYTHON_SETUP_CFG, datadir / "3-expected-setup.cfg")
+    ).assert_file_contents(
+        PYTHON_SETUP_CFG, datadir / "3-expected-setup.cfg"
+    )
 
 
 def test_duplicated_option(tmp_path):
@@ -423,7 +427,9 @@ def test_duplicated_option(tmp_path):
             f": parsing error (DuplicateOptionError): While reading from {project.path_for(PYTHON_SETUP_CFG)!r} "
             f"[line  3]: option 'easy' in section 'abc' already exists",
         )
-    ).assert_file_contents(PYTHON_SETUP_CFG, original_file)
+    ).assert_file_contents(
+        PYTHON_SETUP_CFG, original_file
+    )
 
 
 @mock.patch.object(ConfigUpdater, "update_file")
@@ -457,7 +463,9 @@ def test_simulate_parsing_error_when_saving(update_file, tmp_path):
             Violations.PARSING_ERROR.code,
             ": parsing error (ParsingError): Source contains parsing errors: 'simulating a captured error'",
         ),
-    ).assert_file_contents(PYTHON_SETUP_CFG, original_file)
+    ).assert_file_contents(
+        PYTHON_SETUP_CFG, original_file
+    )
 
 
 def test_generic_ini_with_missing_header(tmp_path):
@@ -485,7 +493,9 @@ def test_generic_ini_with_missing_header(tmp_path):
             f"file: {project.path_for('generic.ini')!r}, line: 1\n"
             "'this_key_is_invalid = for a generic .ini (it should always have a section)\\n'",
         )
-    ).assert_file_contents("generic.ini", expected_generic_ini)
+    ).assert_file_contents(
+        "generic.ini", expected_generic_ini
+    )
 
 
 def test_falsy_values_should_be_reported_and_fixed(tmp_path, datadir):
@@ -635,10 +645,7 @@ def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_
             ".flake8",
             Violations.MISSING_OPTION.code,
             ": section [flake8] has some missing key/value pairs. Use this:",
-            "[flake8]\n"
-            "per-file-ignores = \n"
-            "\t  tests/*.py:WPS116,WPS118\n"
-            "\t  tests_2/*.py:WPS116,WPS118,WPS218",
+            "[flake8]\nper-file-ignores = \n\t  tests/*.py:WPS116,WPS118\n\t  tests_2/*.py:WPS116,WPS118,WPS218",
         )
     ).assert_file_contents(
         ".flake8",
@@ -687,5 +694,110 @@ def test_comma_separated_values_in_multiline_config_value_should_be_without_viol
         per-file-ignores =
           tests/*.py:WPS116,WPS118
           tests_2/*.py:WPS116,WPS118,WPS218
+        """,
+    )
+
+
+def test_multiline_config_value_should_be_enforced_if_some_lines_are_missing(tmp_path):
+    """Target multiline config value is missing some lines."""
+    ProjectMock(tmp_path).save_file(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+        """,
+    ).style(
+        """
+        [".coveragerc".report]
+        exclude_also = \"\"\"
+            def __repr__
+            def __str__
+        \"\"\"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            ".coveragerc",
+            Violations.OPTION_HAS_DIFFERENT_VALUE.code,
+            ": [report]exclude_also is \npragma: no cover\ndef __repr__ but it should be like this:",
+            "[report]\nexclude_also = \npragma: no cover\ndef __repr__\ndef __str__",
+        )
+    ).assert_file_contents(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+            def __str__
+        """,
+    )
+
+
+def test_multiline_config_value_should_be_enforced_if_missing_entirely(tmp_path):
+    """Target multiline config is missing entirely."""
+    ProjectMock(tmp_path).save_file(
+        ".coveragerc",
+        """
+        [run]
+        relative_files = True
+        """,
+    ).style(
+        """
+        [".coveragerc".report]
+        exclude_also = \"\"\"
+            pragma: no cover
+            def __repr__
+        \"\"\"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            ".coveragerc",
+            Violations.MISSING_SECTIONS.code,
+            " has some missing sections. Use this:",
+            "[report]\nexclude_also = \n\t    pragma: no cover\n\t    def __repr__",
+        )
+    ).assert_file_contents(
+        ".coveragerc",
+        """
+        [run]
+        relative_files = True
+
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+        """,
+    )
+
+
+def test_multiline_config_value_should_be_without_violation_if_no_changes(tmp_path):
+    """Target multiline config is unchanged."""
+    ProjectMock(tmp_path).save_file(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+        """,
+    ).style(
+        """
+        [".coveragerc".report]
+        exclude_also = \"\"\"
+            pragma: no cover
+            def __repr__
+        \"\"\"
+        """
+    ).api_check_then_fix().assert_file_contents(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
         """,
     )
