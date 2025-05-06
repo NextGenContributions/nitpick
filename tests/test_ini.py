@@ -635,10 +635,7 @@ def test_comma_separated_values_in_multiline_config_value_should_be_enforced_if_
             ".flake8",
             Violations.MISSING_OPTION.code,
             ": section [flake8] has some missing key/value pairs. Use this:",
-            "[flake8]\n"
-            "per-file-ignores = \n"
-            "\t  tests/*.py:WPS116,WPS118\n"
-            "\t  tests_2/*.py:WPS116,WPS118,WPS218",
+            "[flake8]\nper-file-ignores = \n\t  tests/*.py:WPS116,WPS118\n\t  tests_2/*.py:WPS116,WPS118,WPS218",
         )
     ).assert_file_contents(
         ".flake8",
@@ -687,5 +684,110 @@ def test_comma_separated_values_in_multiline_config_value_should_be_without_viol
         per-file-ignores =
           tests/*.py:WPS116,WPS118
           tests_2/*.py:WPS116,WPS118,WPS218
+        """,
+    )
+
+
+def test_multiline_config_value_should_be_enforced_if_some_lines_are_missing(tmp_path):
+    """Target multiline config value is missing some lines."""
+    ProjectMock(tmp_path).save_file(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+        """,
+    ).style(
+        """
+        [".coveragerc".report]
+        exclude_also = \"\"\"
+            def __repr__
+            def __str__
+        \"\"\"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            ".coveragerc",
+            Violations.OPTION_HAS_DIFFERENT_VALUE.code,
+            ": [report]exclude_also is \npragma: no cover\ndef __repr__ but it should be like this:",
+            "[report]\nexclude_also = \npragma: no cover\ndef __repr__\ndef __str__",
+        )
+    ).assert_file_contents(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+            def __str__
+        """,
+    )
+
+
+def test_multiline_config_value_should_be_enforced_if_missing_entirely(tmp_path):
+    """Target multiline config is missing entirely."""
+    ProjectMock(tmp_path).save_file(
+        ".coveragerc",
+        """
+        [run]
+        relative_files = True
+        """,
+    ).style(
+        """
+        [".coveragerc".report]
+        exclude_also = \"\"\"
+            pragma: no cover
+            def __repr__
+        \"\"\"
+        """
+    ).api_check_then_fix(
+        Fuss(
+            True,
+            ".coveragerc",
+            Violations.MISSING_SECTIONS.code,
+            " has some missing sections. Use this:",
+            "[report]\nexclude_also = \n\t    pragma: no cover\n\t    def __repr__",
+        )
+    ).assert_file_contents(
+        ".coveragerc",
+        """
+        [run]
+        relative_files = True
+
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+        """,
+    )
+
+
+def test_multiline_config_value_should_be_without_violation_if_no_changes(tmp_path):
+    """Target multiline config is unchanged."""
+    ProjectMock(tmp_path).save_file(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
+        """,
+    ).style(
+        """
+        [".coveragerc".report]
+        exclude_also = \"\"\"
+            pragma: no cover
+            def __repr__
+        \"\"\"
+        """
+    ).api_check_then_fix().assert_file_contents(
+        ".coveragerc",
+        """
+        [report]
+        exclude_also =
+            pragma: no cover
+            def __repr__
         """,
     )

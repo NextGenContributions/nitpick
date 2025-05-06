@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 from configparser import ConfigParser, DuplicateOptionError, Error, MissingSectionHeaderError, ParsingError
 from io import StringIO
-from typing import TYPE_CHECKING, Any, ClassVar, Iterator
+from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator
 
 import dictdiffer
 from configupdater import ConfigUpdater, Space
@@ -67,9 +67,17 @@ class IniPlugin(NitpickPlugin):
         self.updater = ConfigUpdater()
         self.comma_separated_values = set(self.comma_separated_values_dict.get(self.filename, []))
 
-        if not self.needs_top_section:
-            return
         if all(isinstance(v, dict) for v in self.expected_config.values()):
+            for section in self.expected_config:
+                for key, value in self.expected_config[section].items():
+                    if self._is_multiline_value(section, key, value):
+                        # Convert the value to a string that's compatible with ConfigUpdater
+                        # Remove the indent to be diff-able later with values in self.updater,
+                        # which was read from existing config
+                        lines = [line.strip() for line in value.strip().split("\n")]
+                        self.expected_config[section][key] = self._get_configupdater_values(lines, indent="")
+            return
+        if not self.needs_top_section:
             return
 
         new_config = {TOP_SECTION: {}}
@@ -134,6 +142,12 @@ class IniPlugin(NitpickPlugin):
         parser = ConfigParser()
         for section in sorted(missing, key=lambda s: "0" if s == TOP_SECTION else f"1{s}"):
             expected_config: dict = self.expected_config[section]
+            for k, v in expected_config.items():  # pylint: disable=invalid-name
+                if self._is_multiline_value(section, k, v):
+                    # Convert the value to a string that's compatible with ConfigUpdater
+                    lines = [line.strip() for line in v.strip().split("\n")]
+                    expected_config[k] = self._get_configupdater_values(lines)
+
             if self.autofix:
                 if self.updater.last_block:
                     self.updater.last_block.add_after.space(1)
@@ -142,6 +156,22 @@ class IniPlugin(NitpickPlugin):
                 self.dirty = True
             parser[section] = expected_config
         return self.contents_without_top_section(self.get_example_cfg(parser))
+
+    def _is_multiline_value(self, section: str, key: str, value: int | str) -> bool:
+        """Check if the value is a multiline value."""
+        return f"{section}.{key}" not in self.comma_separated_values and "\n" in str(value)
+
+    @staticmethod
+    def _get_configupdater_values(values: Iterable[str], separator="\n", indent=4 * " "):
+        """Convert a list of values to a string compatible with ConfigUpdater.
+
+        This is similar to the ConfigUpdater's set_values() method
+        """
+        values = list(values).copy()
+        if "\n" in separator:
+            values = ["", *values]
+            separator = separator + indent
+        return separator.join(values)
 
     # TODO: refactor: convert the contents to dict (with IniConfig().sections?) and mimic other plugins doing dict diffs
     def enforce_rules(self) -> Iterator[Fuss]:
@@ -323,13 +353,28 @@ class IniPlugin(NitpickPlugin):
             actual = str(raw_actual).lower()
             expected = str(raw_expected).lower()
         else:
+            if self._is_multiline_value(section, key, raw_expected):
+                # Find missing lines that should be in the expected value
+                actual_lines = [line.strip() for line in raw_actual.strip().split("\n")]
+                expected_lines = [line.strip() for line in raw_expected.strip().split("\n")]
+                missing_lines = set(expected_lines) - set(actual_lines)
+                # expected value should be the actual lines plus the missing lines
+                raw_expected = raw_actual
+                for line in missing_lines:
+                    raw_expected += "\n" + line
+
             actual = raw_actual
             expected = raw_expected
         if actual == expected:
             return
 
         if self.autofix:
-            self.updater[section][key].value = expected
+            if self._is_multiline_value(section, key, expected):
+                # Handle multiline config using ConfigUpdater's set_values()
+                expected_lines = [line.strip() for line in expected.strip().split("\n")]
+                self.updater[section][key].set_values(expected_lines)
+            else:
+                self.updater[section][key].value = expected
             self.dirty = True
         if section == TOP_SECTION:
             yield self.reporter.make_fuss(
